@@ -1,0 +1,123 @@
+"use client";
+import { useEffect, useState } from "react";
+import { collection, getDocs, doc, updateDoc, orderBy, query } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import toast from "react-hot-toast";
+import { UserCheck, ExternalLink } from "lucide-react";
+import styles from "../table.module.css";
+
+type Agent = {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  areasServed: string;
+  bio: string;
+  socialLink: string;
+  nin: string;
+  ninPhotoURL?: string;
+  plan: string;
+  status: string;
+  slug: string;
+};
+
+export default function AgentsPage() {
+  const [items, setItems] = useState<Agent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    getDocs(query(collection(db, "agents"), orderBy("createdAt", "desc")))
+      .then((snap) => setItems(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Agent))))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const updateStatus = async (id: string, status: string) => {
+    setUpdatingId(id);
+    try {
+      await updateDoc(doc(db, "agents", id), { status });
+      setItems((prev) => prev.map((v) => (v.id === id ? { ...v, status } : v)));
+      toast.success(`Agent ${status}`);
+    } catch {
+      toast.error("Update failed");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  return (
+    <div>
+      <div className={styles.pageHeader}>
+        <div>
+          <h1><UserCheck size={22} /> Agents</h1>
+          <p>{items.length} applications</p>
+        </div>
+      </div>
+
+      {loading ? <p className={styles.loading}>Loading...</p> : (
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Areas</th>
+                <th>Plan</th>
+                <th>Social</th>
+                <th>NIN</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((v) => (
+                <tr key={v.id}>
+                  <td>
+                    <div className={styles.bold}>{v.name}</div>
+                    <div className={styles.sub}>{v.email}</div>
+                  </td>
+                  <td>
+                    <a href={`https://wa.me/256${v.phone.replace(/^0/, "").replace(/\s/g, "")}?text=Hello%20${encodeURIComponent(v.name)}%2C%20your%20agent%20application%20has%20been%20reviewed`} target="_blank" rel="noopener noreferrer" className={styles.waLink}>
+                      {v.phone}
+                    </a>
+                  </td>
+                  <td>{v.areasServed}</td>
+                  <td><span className={`badge badge-${v.plan === "paid" ? "verified" : "new"}`}>{v.plan}</span></td>
+                  <td>
+                    <a href={v.socialLink} target="_blank" rel="noopener noreferrer" className={styles.fileLink}>
+                      <ExternalLink size={14} /> View
+                    </a>
+                  </td>
+                  <td>
+                    <div className={styles.sub}>{v.nin}</div>
+                    {v.ninPhotoURL && (
+                      <a href={v.ninPhotoURL} target="_blank" rel="noopener noreferrer" className={styles.fileLink}>
+                        <ExternalLink size={14} /> Photo
+                      </a>
+                    )}
+                  </td>
+                  <td><span className={`badge badge-${v.status}`}>{v.status}</span></td>
+                  <td>
+                    <div className={styles.actions}>
+                      {v.status !== "approved" && (
+                        <button className={`${styles.actionBtn} ${styles.green}`} onClick={() => updateStatus(v.id, "approved")} disabled={updatingId === v.id}>
+                          Approve
+                        </button>
+                      )}
+                      {v.status !== "rejected" && (
+                        <button className={`${styles.actionBtn} ${styles.red}`} onClick={() => updateStatus(v.id, "rejected")} disabled={updatingId === v.id}>
+                          Reject
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {items.length === 0 && <p className={styles.empty}>No agent applications yet.</p>}
+        </div>
+      )}
+    </div>
+  );
+}

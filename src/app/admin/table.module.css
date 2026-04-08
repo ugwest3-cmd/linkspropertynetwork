@@ -1,0 +1,96 @@
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.pageHeader h1 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.pageHeader p { color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem; }
+
+.loading { color: var(--text-muted); padding: 2rem 0; }
+
+.tableWrap {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border);
+  background: #f8fafc;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: #fafafa; }
+
+.bold { font-weight: 600; }
+.sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem; }
+.capitalize { text-transform: capitalize; }
+.truncate { max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.waLink {
+  color: #128C7E;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+.waLink:hover { text-decoration: underline; }
+
+.fileLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.82rem;
+  color: var(--primary);
+}
+.fileLink:hover { text-decoration: underline; }
+
+.actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+.actionBtn {
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.actionBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.green { background: #dcfce7; color: #166534; }
+.green:hover { background: #bbf7d0; }
+.red { background: #fee2e2; color: #991b1b; }
+.red:hover { background: #fecaca; }
+.blue { background: #dbeafe; color: #1e40af; }
+.blue:hover { background: #bfdbfe; }
+
+.empty { color: var(--text-muted); padding: 2rem 1rem; }

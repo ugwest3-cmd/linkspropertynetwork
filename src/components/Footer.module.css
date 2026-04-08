@@ -1,0 +1,73 @@
+.footer {
+  background: var(--secondary);
+  color: #94a3b8;
+  padding: 4rem 0 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 3rem;
+  padding-bottom: 3rem;
+}
+
+.brand p {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  max-width: 280px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1rem;
+  color: white;
+}
+
+.logo svg { color: var(--primary); }
+
+.footer h4 {
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+}
+
+.footer ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.footer ul li a,
+.footer ul li span {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: #94a3b8;
+  transition: color 0.2s;
+}
+
+.footer ul li a:hover { color: var(--primary); }
+
+.bottom {
+  border-top: 1px solid #1e293b;
+  padding: 1.25rem 0;
+  text-align: center;
+  margin: 0 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 768px) {
+  .grid { grid-template-columns: 1fr; gap: 2rem; }
+  .bottom { flex-direction: column; gap: 0.25rem; margin: 0; text-align: center; }
+}
