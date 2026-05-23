@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -21,7 +22,7 @@ type Listing = {
   agentPhone?: string;
 };
 
-const TYPE_ICONS: Record<string, JSX.Element> = {
+const TYPE_ICONS: Record<string, React.ReactElement> = {
   land: <Layers size={13} />,
   house: <Home size={13} />,
   commercial: <Building2 size={13} />,
