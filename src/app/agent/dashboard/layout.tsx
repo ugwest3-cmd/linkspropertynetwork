@@ -15,7 +15,6 @@ export default function AgentDashboardLayout({ children }: { children: React.Rea
 
   useEffect(() => {
     let isMounted = true;
-    setDebugLog(l => [...l, "useEffect running"]);
     
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (!isMounted) return;
