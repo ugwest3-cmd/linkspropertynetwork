@@ -12,8 +12,11 @@ type Listing = {
   type: string;
   price: string;
   location: string;
+  description: string;
   photos: string[];
   verified: boolean;
+  agentId: string;
+  createdAt: any;
 };
 
 export default function AgentDashboardPage() {
