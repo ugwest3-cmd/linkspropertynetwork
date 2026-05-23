@@ -14,10 +14,14 @@ export default function AgentDashboardLayout({ children }: { children: React.Rea
   const router = useRouter();
 
   useEffect(() => {
+    let isMounted = true;
+    
     const unsub = onAuthStateChanged(auth, async (user) => {
+      if (!isMounted) return;
+      
       if (!user) {
         setLoading(false);
-        router.push("/agent/login");
+        router.replace("/agent/login");
         return;
       }
 
@@ -25,24 +29,38 @@ export default function AgentDashboardLayout({ children }: { children: React.Rea
         const q = query(collection(db, "agents"), where("uid", "==", user.uid));
         const snap = await getDocs(q);
         
+        if (!isMounted) return;
+
         if (snap.empty) {
-          auth.signOut();
+          await auth.signOut();
           setLoading(false);
-          router.push("/agent/login");
+          router.replace("/agent/login");
           return;
         }
 
         const agentData = snap.docs[0].data();
-        setStatus(agentData.status);
+        setStatus(agentData.status || "pending"); // Default to pending if missing
       } catch (err) {
         console.error("Error fetching agent status:", err);
+        if (isMounted) setStatus("error");
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     });
 
-    return () => unsub();
-  }, [router]);
+    const timeout = setTimeout(() => {
+      if (isMounted && loading) {
+        setLoading(false);
+        setStatus("timeout");
+      }
+    }, 8000);
+
+    return () => {
+      isMounted = false;
+      unsub();
+      clearTimeout(timeout);
+    };
+  }, [router, loading]);
 
   if (loading) {
     return <div style={{ display:"flex", height:"100vh", alignItems:"center", justifyContent:"center"}}>Loading Dashboard...</div>;
@@ -54,12 +72,26 @@ export default function AgentDashboardLayout({ children }: { children: React.Rea
         <Navbar />
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", padding: "2rem" }}>
           <div style={{ textAlign: "center", maxWidth: "400px", padding: "2rem", border: "1px solid var(--border)", borderRadius: "var(--radius)" }}>
-            {status === "pending" ? <Clock size={48} color="var(--primary)" style={{ margin: "0 auto 1rem" }}/> : <ShieldAlert size={48} color="var(--danger)" style={{ margin: "0 auto 1rem" }}/>}
-            <h2>{status === "pending" ? "Account Pending Review" : "Account Rejected"}</h2>
+            {status === "pending" ? (
+              <Clock size={48} color="var(--primary)" style={{ margin: "0 auto 1rem" }}/>
+            ) : status === "timeout" ? (
+              <ShieldAlert size={48} color="var(--danger)" style={{ margin: "0 auto 1rem" }}/>
+            ) : (
+              <ShieldAlert size={48} color="var(--danger)" style={{ margin: "0 auto 1rem" }}/>
+            )}
+            
+            <h2>
+              {status === "pending" ? "Account Pending Review" : 
+               status === "timeout" ? "Connection Timeout" : 
+               "Account Rejected or Error"}
+            </h2>
+            
             <p style={{ color: "var(--text-muted)", marginTop: "1rem" }}>
               {status === "pending" 
                 ? "Your agent application is currently under review. Our team will notify you via WhatsApp once approved." 
-                : "Your agent application could not be approved at this time."}
+                : status === "timeout"
+                ? "We couldn't connect to the server. Please check your internet or ad-blocker."
+                : "Your agent application could not be approved at this time or an error occurred."}
             </p>
           </div>
         </div>
