@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Phone, Mail, MapPin } from "lucide-react";
+import { Phone, Mail, MapPin, TrendingUp, FileText } from "lucide-react";
 import styles from "./Footer.module.css";
 
 export default function Footer() {
@@ -9,6 +9,7 @@ export default function Footer() {
   return (
     <footer className={styles.footer}>
       <div className={`container ${styles.grid}`}>
+        {/* Brand */}
         <div className={styles.brand}>
           <div className={styles.logo}>
             <Image src="/logo.png" alt="Links Property Network" width={28} height={28} style={{ objectFit: 'contain' }} />
@@ -17,16 +18,37 @@ export default function Footer() {
           <p>A private, high-trust ecosystem for serious property buyers and pre-screened agents in Uganda.</p>
         </div>
 
+        {/* Services */}
         <div>
           <h4>Services</h4>
           <ul>
             <li><Link href="/verify">Title Verification</Link></li>
+            <li><Link href="/marketplace">Property Marketplace</Link></li>
             <li><Link href="/find-property">Find a Property</Link></li>
-            <li><Link href="/documentation">Documentation Help</Link></li>
-            <li><Link href="/agent/register">Agent Tools</Link></li>
           </ul>
         </div>
 
+        {/* Agent & Documentation — moved here from Navbar */}
+        <div>
+          <h4>For Agents</h4>
+          <ul>
+            <li>
+              <Link href="/agent/register" className={styles.footerHighlight}>
+                <TrendingUp size={14} /> Agent Tools
+              </Link>
+            </li>
+            <li>
+              <Link href="/agent/login">Agent Login</Link>
+            </li>
+            <li>
+              <Link href="/documentation" className={styles.footerHighlight}>
+                <FileText size={14} /> Documentation Help
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        {/* Contact */}
         <div>
           <h4>Contact</h4>
           <ul>
@@ -49,7 +71,7 @@ export default function Footer() {
 
       <div className={styles.bottom}>
         <p>© {new Date().getFullYear()} Links Property Network. All rights reserved.</p>
-        <p>Private platform · Not a public marketplace</p>
+        <p>Uganda's trusted property verification & agent platform.</p>
       </div>
     </footer>
   );
