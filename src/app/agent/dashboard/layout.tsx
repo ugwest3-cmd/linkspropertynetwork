@@ -16,6 +16,7 @@ export default function AgentDashboardLayout({ children }: { children: React.Rea
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (!user) {
+        setLoading(false);
         router.push("/agent/login");
         return;
       }
@@ -26,6 +27,7 @@ export default function AgentDashboardLayout({ children }: { children: React.Rea
         
         if (snap.empty) {
           auth.signOut();
+          setLoading(false);
           router.push("/agent/login");
           return;
         }
