@@ -26,37 +26,47 @@ export default function AgentDashboardLayout({ children }: { children: React.Rea
       }
 
       try {
-        const q = query(collection(db, "agents"), where("uid", "==", user.uid));
+        // Use standard HTTP REST API to completely bypass Firebase SDK WebSocket/Long-Polling bugs
+        const res = await fetch(`https://firestore.googleapis.com/v1/projects/linkspropertynetwork-295bf/databases/(default)/documents:runQuery`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            structuredQuery: {
+              from: [{ collectionId: "agents" }],
+              where: {
+                fieldFilter: {
+                  field: { fieldPath: "uid" },
+                  op: "EQUAL",
+                  value: { stringValue: user.uid }
+                }
+              },
+              limit: 1
+            }
+          })
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch from REST API");
+        }
+
+        const data = await res.json();
         
-        const unsubSnap = onSnapshot(q, 
-          async (snap) => {
-            if (!isMounted) {
-              unsubSnap();
-              return;
-            }
+        if (!isMounted) return;
 
-            if (snap.empty) {
-              await auth.signOut();
-              unsubSnap();
-              setLoading(false);
-              router.replace("/agent/login");
-              return;
-            }
+        // Firestore REST API returns an array of results. If no match, it returns an array with one item having only `readTime`
+        if (!data || data.length === 0 || !data[0].document) {
+          await auth.signOut();
+          setLoading(false);
+          router.replace("/agent/login");
+          return;
+        }
 
-            const agentData = snap.docs[0].data();
-            setStatus(agentData.status || "pending");
-            setLoading(false);
-            unsubSnap();
-          },
-          (err) => {
-            console.error("Error fetching agent status:", err);
-            if (isMounted) {
-              setStatus("error");
-              setLoading(false);
-            }
-            unsubSnap();
-          }
-        );
+        // Extract fields from Firestore REST API format
+        const fields = data[0].document.fields;
+        const statusVal = fields.status?.stringValue || "pending";
+        
+        setStatus(statusVal);
+        setLoading(false);
       } catch (err: any) {
         console.error("Setup error:", err);
         if (isMounted) {

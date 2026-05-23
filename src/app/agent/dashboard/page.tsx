@@ -29,36 +29,83 @@ export default function AgentDashboardPage() {
       }
 
       try {
-        const agentQ = query(collection(db, "agents"), where("uid", "==", user.uid));
-        
-        const unsubAgent = onSnapshot(agentQ, async (agentSnap) => {
-          if (agentSnap.empty) {
-            setLoading(false);
-            unsubAgent();
-            return;
-          }
-          
-          const agentId = agentSnap.docs[0].id;
-          setAgentSlug(agentSnap.docs[0].data().slug);
-          unsubAgent();
-
-          // Fetch listings
-          const listingsQ = query(collection(db, "listings"), where("agentId", "==", agentId));
-          const unsubListings = onSnapshot(listingsQ, (listingsSnap) => {
-            setListings(listingsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Listing)));
-            setLoading(false);
-          }, (err) => {
-            console.error(err);
-            setLoading(false);
-          });
-
-          // Normally we'd return unsubListings from the effect, but we can't easily here.
-          // Since it's a dashboard, listening to real-time updates for listings is actually good.
-        }, (err) => {
-          console.error(err);
-          setLoading(false);
+        const res = await fetch(`https://firestore.googleapis.com/v1/projects/linkspropertynetwork-295bf/databases/(default)/documents:runQuery`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            structuredQuery: {
+              from: [{ collectionId: "agents" }],
+              where: {
+                fieldFilter: {
+                  field: { fieldPath: "uid" },
+                  op: "EQUAL",
+                  value: { stringValue: user.uid }
+                }
+              },
+              limit: 1
+            }
+          })
         });
+
+        if (!res.ok) throw new Error("Failed to fetch agent");
+        const data = await res.json();
+
+        if (!data || data.length === 0 || !data[0].document) {
+          setLoading(false);
+          return;
+        }
+
+        const agentDoc = data[0].document;
+        // The REST API document name is like projects/.../databases/(default)/documents/agents/{agentId}
+        const agentId = agentDoc.name.split("/").pop() as string;
+        setAgentSlug(agentDoc.fields.slug?.stringValue || "");
+
+        // Fetch listings
+        const listingsRes = await fetch(`https://firestore.googleapis.com/v1/projects/linkspropertynetwork-295bf/databases/(default)/documents:runQuery`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            structuredQuery: {
+              from: [{ collectionId: "listings" }],
+              where: {
+                fieldFilter: {
+                  field: { fieldPath: "agentId" },
+                  op: "EQUAL",
+                  value: { stringValue: agentId }
+                }
+              }
+            }
+          })
+        });
+
+        if (!listingsRes.ok) throw new Error("Failed to fetch listings");
+        const listingsData = await listingsRes.json();
         
+        const parsedListings: Listing[] = [];
+        if (listingsData && listingsData.length > 0 && listingsData[0].document) {
+          for (const item of listingsData) {
+            if (item.document) {
+              const docId = item.document.name.split("/").pop() as string;
+              const f = item.document.fields;
+              
+              parsedListings.push({
+                id: docId,
+                title: f.title?.stringValue || "",
+                type: f.type?.stringValue || "",
+                price: f.price?.stringValue || "",
+                location: f.location?.stringValue || "",
+                description: f.description?.stringValue || "",
+                agentId: f.agentId?.stringValue || "",
+                photos: f.photos?.arrayValue?.values?.map((v: any) => v.stringValue) || [],
+                verified: f.verified?.booleanValue || false,
+                createdAt: f.createdAt?.timestampValue || null,
+              });
+            }
+          }
+        }
+        
+        setListings(parsedListings);
+        setLoading(false);
       } catch (err) {
         console.error(err);
         setLoading(false);
