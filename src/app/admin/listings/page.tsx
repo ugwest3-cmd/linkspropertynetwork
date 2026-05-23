@@ -1,0 +1,150 @@
+"use client";
+import { useEffect, useState } from "react";
+import { collection, getDocs, doc, updateDoc, orderBy, query } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import toast from "react-hot-toast";
+import { LayoutList, ExternalLink, CheckCircle, XCircle } from "lucide-react";
+import styles from "../table.module.css";
+
+type Listing = {
+  id: string;
+  title: string;
+  type: string;
+  price: string;
+  location: string;
+  description: string;
+  photos: string[];
+  agentId: string;
+  agentName?: string;
+  verified: boolean;
+  createdAt: any;
+};
+
+export default function AdminListingsPage() {
+  const [items, setItems] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const listSnap = await getDocs(
+        query(collection(db, "listings"), orderBy("createdAt", "desc"))
+      );
+      const agentsSnap = await getDocs(collection(db, "agents"));
+      const agentsMap: Record<string, string> = {};
+      agentsSnap.docs.forEach((d) => { agentsMap[d.id] = d.data().name; });
+
+      const listings = listSnap.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+        agentName: agentsMap[(d.data() as any).agentId] || "Unknown Agent",
+      })) as Listing[];
+
+      setItems(listings);
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
+
+  const setVerified = async (id: string, verified: boolean) => {
+    setUpdatingId(id);
+    try {
+      await updateDoc(doc(db, "listings", id), { verified });
+      setItems((prev) =>
+        prev.map((v) => (v.id === id ? { ...v, verified } : v))
+      );
+      toast.success(verified ? "Listing published to Marketplace!" : "Listing unpublished.");
+    } catch {
+      toast.error("Update failed");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  return (
+    <div>
+      <div className={styles.pageHeader}>
+        <div>
+          <h1><LayoutList size={22} /> Listings</h1>
+          <p>{items.length} total &nbsp;·&nbsp; {items.filter((l) => l.verified).length} published</p>
+        </div>
+      </div>
+
+      {loading ? (
+        <p className={styles.loading}>Loading...</p>
+      ) : (
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Listing</th>
+                <th>Type</th>
+                <th>Location</th>
+                <th>Price</th>
+                <th>Agent</th>
+                <th>Photo</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr key={item.id}>
+                  <td>
+                    <div className={styles.bold}>{item.title}</div>
+                    <div className={styles.sub} style={{ maxWidth: 200 }}>
+                      {item.description.slice(0, 60)}...
+                    </div>
+                  </td>
+                  <td><span className={`badge badge-new`}>{item.type}</span></td>
+                  <td>{item.location}</td>
+                  <td>UGX {item.price}</td>
+                  <td>{item.agentName}</td>
+                  <td>
+                    {item.photos?.[0] ? (
+                      <a href={item.photos[0]} target="_blank" rel="noopener noreferrer" className={styles.fileLink}>
+                        <ExternalLink size={14} /> View
+                      </a>
+                    ) : (
+                      <span className={styles.sub}>None</span>
+                    )}
+                  </td>
+                  <td>
+                    <span className={`badge ${item.verified ? "badge-verified" : "badge-pending"}`}>
+                      {item.verified ? "Published" : "Pending"}
+                    </span>
+                  </td>
+                  <td>
+                    <div className={styles.actions}>
+                      {!item.verified && (
+                        <button
+                          className={`${styles.actionBtn} ${styles.green}`}
+                          onClick={() => setVerified(item.id, true)}
+                          disabled={updatingId === item.id}
+                        >
+                          <CheckCircle size={14} /> {updatingId === item.id ? "..." : "Publish"}
+                        </button>
+                      )}
+                      {item.verified && (
+                        <button
+                          className={`${styles.actionBtn} ${styles.red}`}
+                          onClick={() => setVerified(item.id, false)}
+                          disabled={updatingId === item.id}
+                        >
+                          <XCircle size={14} /> {updatingId === item.id ? "..." : "Unpublish"}
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {items.length === 0 && (
+            <p className={styles.empty}>No listings submitted yet.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

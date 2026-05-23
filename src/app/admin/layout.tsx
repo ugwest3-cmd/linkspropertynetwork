@@ -5,15 +5,16 @@ import { auth } from "@/lib/firebase";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ShieldCheck, Users, FileText, UserCheck, LogOut, LayoutDashboard } from "lucide-react";
+import { ShieldCheck, Users, FileText, UserCheck, LogOut, LayoutDashboard, LayoutList } from "lucide-react";
 import styles from "./adminLayout.module.css";
 
 const navItems = [
   { href: "/admin", icon: <LayoutDashboard size={18} />, label: "Dashboard" },
   { href: "/admin/verifications", icon: <ShieldCheck size={18} />, label: "Verifications" },
   { href: "/admin/buyers", icon: <Users size={18} />, label: "Buyer Requests" },
-  { href: "/admin/documentation", icon: <FileText size={18} />, label: "Documentation" },
   { href: "/admin/agents", icon: <UserCheck size={18} />, label: "Agents" },
+  { href: "/admin/listings", icon: <LayoutList size={18} />, label: "Listings" },
+  { href: "/admin/documentation", icon: <FileText size={18} />, label: "Documentation" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

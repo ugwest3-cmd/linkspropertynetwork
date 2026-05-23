@@ -26,6 +26,7 @@ export default function Navbar() {
 
         <ul className={`${styles.links} ${open ? styles.open : ""}`}>
           <li><Link href="/verify" onClick={() => setOpen(false)}>Verify Title</Link></li>
+          <li><Link href="/marketplace" onClick={() => setOpen(false)}>Marketplace</Link></li>
           <li><Link href="/find-property" onClick={() => setOpen(false)}>Find Property</Link></li>
           <li><Link href="/documentation" onClick={() => setOpen(false)}>Documentation</Link></li>
           <li><Link href="/agent/register" onClick={() => setOpen(false)}>Agent Tools</Link></li>
