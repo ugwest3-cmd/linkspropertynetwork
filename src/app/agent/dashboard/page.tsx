@@ -22,14 +22,19 @@ export default function AgentDashboardPage() {
   const [agentSlug, setAgentSlug] = useState("");
 
   useEffect(() => {
-    const loadDashboard = async () => {
-      const user = auth.currentUser;
-      if (!user) return;
+    const unsub = auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
       try {
         const agentQ = query(collection(db, "agents"), where("uid", "==", user.uid));
         const agentSnap = await getDocs(agentQ);
-        if (agentSnap.empty) return;
+        if (agentSnap.empty) {
+          setLoading(false);
+          return;
+        }
         
         const agentId = agentSnap.docs[0].id;
         setAgentSlug(agentSnap.docs[0].data().slug);
@@ -43,9 +48,9 @@ export default function AgentDashboardPage() {
       } finally {
         setLoading(false);
       }
-    };
+    });
 
-    loadDashboard();
+    return () => unsub();
   }, []);
 
   return (

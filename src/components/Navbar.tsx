@@ -26,13 +26,8 @@ export default function Navbar() {
 
         <ul className={`${styles.links} ${open ? styles.open : ""}`}>
           <li><Link href="/verify" onClick={() => setOpen(false)}>Verify Title</Link></li>
-          <li><Link href="/marketplace" onClick={() => setOpen(false)}>Marketplace</Link></li>
+          <li><Link href="/about" onClick={() => setOpen(false)}>About Us</Link></li>
           <li><Link href="/find-property" onClick={() => setOpen(false)}>Find Property</Link></li>
-          {user ? (
-            <li><Link href="/agent/dashboard" className={styles.dashboardLink} onClick={() => setOpen(false)}><LayoutDashboard size={18}/> Dashboard</Link></li>
-          ) : (
-            <li><Link href="/agent/login" className={styles.loginLink} onClick={() => setOpen(false)}><LogIn size={18}/> Login</Link></li>
-          )}
           <li>
             <a
               href={`https://wa.me/${process.env.NEXT_PUBLIC_ADMIN_WHATSAPP}?text=Hello%20Links%20Property%20Network`}

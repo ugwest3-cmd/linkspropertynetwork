@@ -23,7 +23,8 @@ export default function Footer() {
           <h4>Services</h4>
           <ul>
             <li><Link href="/verify">Title Verification</Link></li>
-            <li><Link href="/marketplace">Property Marketplace</Link></li>
+            <li><Link href="/">Property Marketplace</Link></li>
+            <li><Link href="/about">About Us</Link></li>
             <li><Link href="/find-property">Find a Property</Link></li>
           </ul>
         </div>

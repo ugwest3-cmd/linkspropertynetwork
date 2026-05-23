@@ -1,13 +1,12 @@
 "use client";
-import React from "react";
-import Link from "next/link";
+import { useState, useEffect } from "react";
+import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { ShieldCheck, Users, ChevronRight, CheckCircle, Home, Layers, Building2, MapPin, Tag, MessageCircle, ArrowRight } from "lucide-react";
+import { Search, MapPin, Tag, Home, Layers, Building2, SlidersHorizontal, MessageCircle, X } from "lucide-react";
+import Link from "next/link";
 import styles from "./Home.module.css";
-import { useEffect, useState } from "react";
-import { collection, query, where, orderBy, limit, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 type Listing = {
   id: string;
@@ -20,260 +19,290 @@ type Listing = {
   agentId: string;
   agentName?: string;
   agentPhone?: string;
+  agentSlug?: string;
+  createdAt: any;
 };
 
-const TYPE_ICONS: Record<string, React.ReactElement> = {
-  land: <Layers size={13} />,
-  house: <Home size={13} />,
-  commercial: <Building2 size={13} />,
+const TYPE_ICONS = {
+  land: <Layers size={14} />,
+  house: <Home size={14} />,
+  commercial: <Building2 size={14} />,
 };
 
-const TYPE_LABELS: Record<string, string> = {
+const TYPE_LABELS = {
   land: "Land / Plot",
   house: "House / Apartment",
   commercial: "Commercial",
 };
 
-export default function HomePage() {
-  const adminWa = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP || "256700000000";
+export default function MarketplacePage() {
   const [listings, setListings] = useState<Listing[]>([]);
-  const [loadingListings, setLoadingListings] = useState(true);
+  const [filtered, setFiltered] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
-    const fetchLatest = async () => {
+    const fetchListings = async () => {
       try {
-        const snap = await getDocs(
+        // Fetch verified listings
+        const listingsSnap = await getDocs(
           query(
             collection(db, "listings"),
             where("verified", "==", true),
-            orderBy("createdAt", "desc"),
-            limit(6)
+            orderBy("createdAt", "desc")
           )
         );
-        const agentsSnap = await getDocs(collection(db, "agents"));
-        const agentsMap: Record<string, any> = {};
-        agentsSnap.docs.forEach((d) => { agentsMap[d.id] = d.data(); });
 
-        const data = snap.docs.map((d) => ({
+        const rawListings = listingsSnap.docs.map((d) => ({
           id: d.id,
           ...d.data(),
-          agentName: agentsMap[(d.data() as any).agentId]?.name || "LPN Agent",
-          agentPhone: agentsMap[(d.data() as any).agentId]?.phone || "",
         })) as Listing[];
 
-        setListings(data);
-      } catch (e) {
-        console.error(e);
+        // Fetch all agents to enrich listings with agent info
+        const agentsSnap = await getDocs(collection(db, "agents"));
+        const agentsMap: Record<string, any> = {};
+        agentsSnap.docs.forEach((d) => {
+          agentsMap[d.id] = d.data();
+        });
+
+        const enriched = rawListings.map((l) => ({
+          ...l,
+          agentName: agentsMap[l.agentId]?.name || "LPN Agent",
+          agentPhone: agentsMap[l.agentId]?.phone || "",
+          agentSlug: agentsMap[l.agentId]?.slug || "",
+        }));
+
+        setListings(enriched);
+        setFiltered(enriched);
+      } catch (err) {
+        console.error("Error fetching marketplace listings:", err);
       } finally {
-        setLoadingListings(false);
+        setLoading(false);
       }
     };
-    fetchLatest();
+
+    fetchListings();
   }, []);
 
+  // Filter + search
+  useEffect(() => {
+    let results = listings;
+
+    if (typeFilter !== "all") {
+      results = results.filter((l) => l.type === typeFilter);
+    }
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      results = results.filter(
+        (l) =>
+          l.title.toLowerCase().includes(q) ||
+          l.location.toLowerCase().includes(q) ||
+          l.description.toLowerCase().includes(q)
+      );
+    }
+
+    if (locationFilter.trim()) {
+      const lq = locationFilter.toLowerCase();
+      results = results.filter((l) => l.location.toLowerCase().includes(lq));
+    }
+
+    if (minPrice || maxPrice) {
+      const min = minPrice ? parseInt(minPrice.replace(/\D/g, ""), 10) : 0;
+      const max = maxPrice ? parseInt(maxPrice.replace(/\D/g, ""), 10) : Infinity;
+      results = results.filter((l) => {
+        const val = parseInt(l.price.replace(/\D/g, ""), 10) || 0;
+        return val >= min && val <= max;
+      });
+    }
+
+    setFiltered(results);
+  }, [search, typeFilter, minPrice, maxPrice, locationFilter, listings]);
+
   const waLink = (phone: string, title: string) =>
-    `https://wa.me/256${phone.replace(/^0/, "").replace(/\s/g, "")}?text=Hi%2C%20I%20saw%20*${encodeURIComponent(title)}*%20on%20Links%20Property%20Network%20and%20I%20am%20interested.`;
-
-  const services = [
-    {
-      icon: <ShieldCheck size={28} />,
-      title: "Title Verification",
-      desc: "Submit your property details and we verify the title. Get a full report in 1–3 business days.",
-      href: "/verify",
-      price: "From UGX 50,000",
-      color: "#f97316",
-    },
-    {
-      icon: <Users size={28} />,
-      title: "Serious Buyer Brokerage",
-      desc: "Tell us what you're looking for. We match you with 1–3 pre-screened agents via WhatsApp.",
-      href: "/find-property",
-      price: "1–5% commission on close",
-      color: "#38bdf8",
-    },
-  ];
-
-  const trust = [
-    "Manual human verification — no automated guesses",
-    "Pre-screened agents with verified social presence & NIN",
-    "WhatsApp-first communication for instant response",
-    "Private platform — serious buyers only",
-    "Flat-fee and commission-based transparency",
-    "Land Price Intelligence available for premium subscribers",
-  ];
+    `https://wa.me/256${phone.replace(/^0/, "").replace(/\s/g, "")}?text=Hi%2C%20I%20saw%20your%20listing%20on%20Links%20Property%20Network%3A%20*${encodeURIComponent(title)}*%20and%20I%20am%20interested.%20Please%20tell%20me%20more.`;
 
   return (
     <>
       <Navbar />
       <main>
-        {/* Hero */}
+        {/* Hero Banner */}
         <section className={styles.hero}>
           <div className={`container ${styles.heroInner}`}>
-            <div className={styles.heroTag}>🇺🇬 Uganda&apos;s Most Trusted Property Platform</div>
-            <h1 className={styles.heroTitle}>
-              Buy Property in Uganda<br />
-              <span className={styles.highlight}>With Full Confidence</span>
-            </h1>
-            <p className={styles.heroSub}>
-              Title verification, legal documentation, and vetted agent matching — all in one private, high-trust network. WhatsApp-first. Manual. Reliable.
-            </p>
-            <div className={styles.heroCTA}>
-              <Link href="/marketplace" className="btn btn-primary">
-                Browse Properties <ChevronRight size={18} />
-              </Link>
-              <a
-                href={`https://wa.me/${adminWa}?text=Hello%2C%20I%20want%20to%20find%20a%20property`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-whatsapp"
+            <div className={styles.heroText}>
+              <span className={styles.heroBadge}>🏡 Live Listings</span>
+              <h1>Property Marketplace</h1>
+              <p>Browse verified real estate listings posted by our network of trusted agents across Uganda.</p>
+            </div>
+
+            {/* Search Bar */}
+            <div className={styles.searchBar}>
+              <Search size={18} className={styles.searchIcon} />
+              <input
+                type="text"
+                placeholder="Search by location, title, or keyword..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className={styles.searchInput}
+              />
+              {search && (
+                <button onClick={() => setSearch("")} className={styles.clearBtn}>
+                  <X size={16} />
+                </button>
+              )}
+              <button
+                className={styles.filterToggle}
+                onClick={() => setShowFilters(!showFilters)}
               >
-                Chat on WhatsApp
-              </a>
+                <SlidersHorizontal size={16} /> Filters
+              </button>
             </div>
-            <div className={styles.heroStats}>
-              <div><strong>50k–300k</strong><span>Verification Fee (UGX)</span></div>
-              <div><strong>1–3 days</strong><span>Report turnaround</span></div>
-              <div><strong>100%</strong><span>Human verified</span></div>
-            </div>
+
+            {/* Advanced Filters */}
+            {showFilters && (
+              <div className={styles.advancedFilters}>
+                <div className={styles.filterGroup}>
+                  <label>Property Type</label>
+                  <div className={styles.filterPills}>
+                    {(["all", "land", "house", "commercial"] as const).map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setTypeFilter(t)}
+                        className={`${styles.pill} ${typeFilter === t ? styles.pillActive : ""}`}
+                      >
+                        {t === "all" ? "All Types" : TYPE_LABELS[t]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className={styles.filterGroupRow}>
+                  <div className={styles.filterGroup}>
+                    <label>Location</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Kampala, Kira..."
+                      value={locationFilter}
+                      onChange={(e) => setLocationFilter(e.target.value)}
+                      className={styles.filterInput}
+                    />
+                  </div>
+
+                  <div className={styles.filterGroup}>
+                    <label>Min Price (UGX)</label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 50000000"
+                      value={minPrice}
+                      onChange={(e) => setMinPrice(e.target.value)}
+                      className={styles.filterInput}
+                    />
+                  </div>
+
+                  <div className={styles.filterGroup}>
+                    <label>Max Price (UGX)</label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 200000000"
+                      value={maxPrice}
+                      onChange={(e) => setMaxPrice(e.target.value)}
+                      className={styles.filterInput}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
-        {/* === LIVE MARKETPLACE PREVIEW === */}
-        <section className={styles.marketSection}>
-          <div className="container">
-            <div className={styles.marketHeader}>
-              <div>
-                <span className={styles.marketBadge}>🏡 Live Listings</span>
-                <h2>Latest Properties</h2>
-                <p>Fresh listings from our verified agent network. Updated in real-time.</p>
-              </div>
-              <Link href="/marketplace" className={`btn btn-outline ${styles.seeAllBtn}`}>
-                See All Properties <ArrowRight size={16} />
-              </Link>
+        {/* Listings Grid */}
+        <section className={`container ${styles.grid}`}>
+          {loading ? (
+            <div className={styles.loadingGrid}>
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className={styles.skeleton} />
+              ))}
             </div>
-
-            {loadingListings ? (
-              <div className={styles.skeletonGrid}>
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className={styles.skeleton} />
-                ))}
+          ) : filtered.length === 0 ? (
+            <div className={styles.empty}>
+              <Home size={48} strokeWidth={1} />
+              <h3>No listings found</h3>
+              <p>{listings.length === 0 ? "No verified properties yet. Check back soon!" : "Try adjusting your filters."}</p>
+            </div>
+          ) : (
+            <>
+              <div className={styles.resultsBar}>
+                <span><strong>{filtered.length}</strong> propert{filtered.length === 1 ? "y" : "ies"} found</span>
               </div>
-            ) : listings.length === 0 ? (
-              <div className={styles.noListings}>
-                <p>No listings yet — check back soon or <Link href="/marketplace">visit the marketplace</Link>.</p>
-              </div>
-            ) : (
-              <div className={styles.listingsGrid}>
-                {listings.map((l) => (
-                  <article key={l.id} className={styles.listingCard}>
-                    <div className={styles.listingPhoto}>
-                      {l.photos?.[0] ? (
-                        <img src={l.photos[0]} alt={l.title} />
+              <div className={styles.cards}>
+                {filtered.map((listing) => (
+                  <article key={listing.id} className={styles.card}>
+                    {/* Photo */}
+                    <div className={styles.cardPhoto}>
+                      {listing.photos?.[0] ? (
+                        <img src={listing.photos[0]} alt={listing.title} />
                       ) : (
-                        <div className={styles.noPhoto}><Home size={36} strokeWidth={1} /></div>
+                        <div className={styles.noPhoto}>
+                          <Home size={40} strokeWidth={1} />
+                        </div>
                       )}
-                      <span className={`${styles.typeBadge} ${styles[`type_${l.type}`]}`}>
-                        {TYPE_ICONS[l.type]} {TYPE_LABELS[l.type]}
+                      <span className={`${styles.typeBadge} ${styles[`type_${listing.type}`]}`}>
+                        {TYPE_ICONS[listing.type]} {TYPE_LABELS[listing.type]}
                       </span>
                     </div>
-                    <div className={styles.listingBody}>
-                      <h3>{l.title}</h3>
-                      <div className={styles.listingMeta}>
-                        <span><MapPin size={12} /> {l.location}</span>
+
+                    {/* Info */}
+                    <div className={styles.cardBody}>
+                      <h2 className={styles.cardTitle}>{listing.title}</h2>
+
+                      <div className={styles.cardMeta}>
+                        <span className={styles.location}>
+                          <MapPin size={13} /> {listing.location}
+                        </span>
                       </div>
-                      <p className={styles.listingDesc}>{l.description.slice(0, 90)}{l.description.length > 90 ? "..." : ""}</p>
-                      <div className={styles.listingFooter}>
-                        <span className={styles.price}><Tag size={13} /> UGX {l.price}</span>
-                        <a
-                          href={waLink(l.agentPhone || "", l.title)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`btn btn-whatsapp ${styles.waBtn}`}
-                        >
-                          <MessageCircle size={14} /> Enquire
-                        </a>
+
+                      <p className={styles.cardDesc}>{listing.description.slice(0, 100)}{listing.description.length > 100 ? "..." : ""}</p>
+
+                      <div className={styles.cardFooter}>
+                        <div className={styles.price}>
+                          <Tag size={14} />
+                          <span>UGX {listing.price}</span>
+                        </div>
+
+                        <div className={styles.cardActions}>
+                          {listing.agentSlug && (
+                            <Link href={`/agents/${listing.agentSlug}`} className={styles.viewAgent}>
+                              View Agent
+                            </Link>
+                          )}
+                          <a
+                            href={waLink(listing.agentPhone || "", listing.title)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`btn btn-whatsapp ${styles.waBtn}`}
+                          >
+                            <MessageCircle size={15} /> Enquire
+                          </a>
+                        </div>
                       </div>
+
+                      {listing.agentName && (
+                        <div className={styles.agentLine}>
+                          <span className={styles.agentDot} />
+                          Posted by <strong>{listing.agentName}</strong>
+                        </div>
+                      )}
                     </div>
                   </article>
                 ))}
               </div>
-            )}
-
-            {listings.length > 0 && (
-              <div className={styles.marketFooterCTA}>
-                <Link href="/marketplace" className="btn btn-primary">
-                  View All Listings <ArrowRight size={16} />
-                </Link>
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* Services */}
-        <section className="section">
-          <div className="container">
-            <div className={styles.sectionHead}>
-              <h2>Our Services</h2>
-              <p>Everything you need for a safe property transaction in Uganda.</p>
-            </div>
-            <div className={styles.servicesGrid}>
-              {services.map((s) => (
-                <Link href={s.href} key={s.title} className={styles.serviceCard}>
-                  <div className={styles.serviceIcon} style={{ color: s.color, background: `${s.color}15` }}>
-                    {s.icon}
-                  </div>
-                  <h3>{s.title}</h3>
-                  <p>{s.desc}</p>
-                  <div className={styles.servicePrice}>{s.price}</div>
-                  <div className={styles.serviceLink}>
-                    Learn more <ChevronRight size={16} />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Trust Section */}
-        <section className={styles.trustSection}>
-          <div className="container">
-            <div className={styles.trustGrid}>
-              <div>
-                <h2>Why Links Property Network?</h2>
-                <p className={styles.trustSub}>
-                  Real estate fraud in Uganda costs buyers millions every year. We built a system that puts trust, verification, and human review at the center of every deal.
-                </p>
-                <a
-                  href={`https://wa.me/${adminWa}?text=I%20want%20to%20learn%20more%20about%20Links%20Property%20Network`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-primary"
-                >
-                  Talk to Our Team
-                </a>
-              </div>
-              <ul className={styles.trustList}>
-                {trust.map((item) => (
-                  <li key={item}>
-                    <CheckCircle size={18} color="var(--success)" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        {/* CTA Banner */}
-        <section className={styles.ctaBanner}>
-          <div className="container" style={{ textAlign: "center" }}>
-            <h2>Ready to start your property journey?</h2>
-            <p>Browse listings, verify a title, or find a property today.</p>
-            <div className={styles.heroCTA}>
-              <Link href="/marketplace" className="btn btn-primary">Browse Marketplace</Link>
-              <Link href="/verify" className="btn btn-outline" style={{ borderColor: "white", color: "white" }}>Verify a Title</Link>
-            </div>
-          </div>
+            </>
+          )}
         </section>
       </main>
       <Footer />
