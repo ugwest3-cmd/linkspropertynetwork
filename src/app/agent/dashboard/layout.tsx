@@ -11,13 +11,16 @@ import { Clock, ShieldAlert } from "lucide-react";
 export default function AgentDashboardLayout({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<string | null>(null);
+  const [debugLog, setDebugLog] = useState<string[]>(["Mounting..."]);
   const router = useRouter();
 
   useEffect(() => {
     let isMounted = true;
+    setDebugLog(l => [...l, "useEffect running"]);
     
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (!isMounted) return;
+      setDebugLog(l => [...l, `onAuthStateChanged fired, user: ${user ? user.uid : "null"}`]);
       
       if (!user) {
         setLoading(false);
@@ -26,11 +29,13 @@ export default function AgentDashboardLayout({ children }: { children: React.Rea
       }
 
       try {
+        setDebugLog(l => [...l, "Creating query..."]);
         const q = query(collection(db, "agents"), where("uid", "==", user.uid));
         
-        // Use onSnapshot instead of getDocs to bypass promise-hanging bugs
+        setDebugLog(l => [...l, "Attaching onSnapshot..."]);
         const unsubSnap = onSnapshot(q, 
           async (snap) => {
+            setDebugLog(l => [...l, `onSnapshot NEXT fired, empty: ${snap.empty}`]);
             if (!isMounted) {
               unsubSnap();
               return;
@@ -47,10 +52,11 @@ export default function AgentDashboardLayout({ children }: { children: React.Rea
             const agentData = snap.docs[0].data();
             setStatus(agentData.status || "pending");
             setLoading(false);
-            unsubSnap(); // We only need it once for the layout
+            unsubSnap();
           },
           (err) => {
             console.error("Error fetching agent status:", err);
+            setDebugLog(l => [...l, `onSnapshot ERROR: ${err.message}`]);
             if (isMounted) {
               setStatus("error");
               setLoading(false);
@@ -58,8 +64,9 @@ export default function AgentDashboardLayout({ children }: { children: React.Rea
             unsubSnap();
           }
         );
-      } catch (err) {
+      } catch (err: any) {
         console.error("Setup error:", err);
+        setDebugLog(l => [...l, `TRY CATCH ERROR: ${err.message}`]);
         if (isMounted) {
           setStatus("error");
           setLoading(false);
@@ -82,7 +89,14 @@ export default function AgentDashboardLayout({ children }: { children: React.Rea
   }, [router, loading]);
 
   if (loading) {
-    return <div style={{ display:"flex", height:"100vh", alignItems:"center", justifyContent:"center"}}>Loading Dashboard...</div>;
+    return (
+      <div style={{ display:"flex", flexDirection:"column", height:"100vh", alignItems:"center", justifyContent:"center"}}>
+        <div>Loading Dashboard...</div>
+        <div style={{ marginTop: "1rem", fontSize: "0.8rem", color: "gray", textAlign: "left" }}>
+          {debugLog.map((log, i) => <div key={i}>{log}</div>)}
+        </div>
+      </div>
+    );
   }
 
   if (status !== "approved") {
