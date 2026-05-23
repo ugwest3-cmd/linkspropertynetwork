@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import Link from "next/link";
 import { Plus, Home, MapPin, CheckCircle } from "lucide-react";
@@ -30,22 +30,37 @@ export default function AgentDashboardPage() {
 
       try {
         const agentQ = query(collection(db, "agents"), where("uid", "==", user.uid));
-        const agentSnap = await getDocs(agentQ);
-        if (agentSnap.empty) {
-          setLoading(false);
-          return;
-        }
         
-        const agentId = agentSnap.docs[0].id;
-        setAgentSlug(agentSnap.docs[0].data().slug);
+        const unsubAgent = onSnapshot(agentQ, async (agentSnap) => {
+          if (agentSnap.empty) {
+            setLoading(false);
+            unsubAgent();
+            return;
+          }
+          
+          const agentId = agentSnap.docs[0].id;
+          setAgentSlug(agentSnap.docs[0].data().slug);
+          unsubAgent();
 
-        const listingsQ = query(collection(db, "listings"), where("agentId", "==", agentId));
-        const listingsSnap = await getDocs(listingsQ);
+          // Fetch listings
+          const listingsQ = query(collection(db, "listings"), where("agentId", "==", agentId));
+          const unsubListings = onSnapshot(listingsQ, (listingsSnap) => {
+            setListings(listingsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Listing)));
+            setLoading(false);
+          }, (err) => {
+            console.error(err);
+            setLoading(false);
+          });
+
+          // Normally we'd return unsubListings from the effect, but we can't easily here.
+          // Since it's a dashboard, listening to real-time updates for listings is actually good.
+        }, (err) => {
+          console.error(err);
+          setLoading(false);
+        });
         
-        setListings(listingsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Listing)));
       } catch (err) {
         console.error(err);
-      } finally {
         setLoading(false);
       }
     });

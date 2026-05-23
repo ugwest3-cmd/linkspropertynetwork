@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
@@ -27,24 +27,43 @@ export default function AgentDashboardLayout({ children }: { children: React.Rea
 
       try {
         const q = query(collection(db, "agents"), where("uid", "==", user.uid));
-        const snap = await getDocs(q);
         
-        if (!isMounted) return;
+        // Use onSnapshot instead of getDocs to bypass promise-hanging bugs
+        const unsubSnap = onSnapshot(q, 
+          async (snap) => {
+            if (!isMounted) {
+              unsubSnap();
+              return;
+            }
 
-        if (snap.empty) {
-          await auth.signOut();
-          setLoading(false);
-          router.replace("/agent/login");
-          return;
-        }
+            if (snap.empty) {
+              await auth.signOut();
+              unsubSnap();
+              setLoading(false);
+              router.replace("/agent/login");
+              return;
+            }
 
-        const agentData = snap.docs[0].data();
-        setStatus(agentData.status || "pending"); // Default to pending if missing
+            const agentData = snap.docs[0].data();
+            setStatus(agentData.status || "pending");
+            setLoading(false);
+            unsubSnap(); // We only need it once for the layout
+          },
+          (err) => {
+            console.error("Error fetching agent status:", err);
+            if (isMounted) {
+              setStatus("error");
+              setLoading(false);
+            }
+            unsubSnap();
+          }
+        );
       } catch (err) {
-        console.error("Error fetching agent status:", err);
-        if (isMounted) setStatus("error");
-      } finally {
-        if (isMounted) setLoading(false);
+        console.error("Setup error:", err);
+        if (isMounted) {
+          setStatus("error");
+          setLoading(false);
+        }
       }
     });
 
