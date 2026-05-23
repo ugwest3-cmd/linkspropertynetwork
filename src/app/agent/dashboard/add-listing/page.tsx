@@ -32,16 +32,20 @@ export default function AddListingPage() {
   });
 
   useEffect(() => {
-    const fetchAgent = async () => {
-      const user = auth.currentUser;
+    const unsub = auth.onAuthStateChanged(async (user) => {
       if (!user) return;
-      const q = query(collection(db, "agents"), where("uid", "==", user.uid));
-      const snap = await getDocs(q);
-      if (!snap.empty) {
-        setAgentId(snap.docs[0].id);
+      
+      try {
+        const q = query(collection(db, "agents"), where("uid", "==", user.uid));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          setAgentId(snap.docs[0].id);
+        }
+      } catch (err) {
+        console.error("Error fetching agent mapping:", err);
       }
-    };
-    fetchAgent();
+    });
+    return () => unsub();
   }, []);
 
   const onSubmit = async (data: FormData) => {

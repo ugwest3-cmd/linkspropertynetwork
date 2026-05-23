@@ -101,12 +101,12 @@ export default function AgentsPage() {
                     <div className={styles.actions}>
                       {v.status !== "approved" && (
                         <button className={`${styles.actionBtn} ${styles.green}`} onClick={() => updateStatus(v.id, "approved")} disabled={updatingId === v.id}>
-                          Approve
+                          {updatingId === v.id ? "..." : "Approve"}
                         </button>
                       )}
                       {v.status !== "rejected" && (
                         <button className={`${styles.actionBtn} ${styles.red}`} onClick={() => updateStatus(v.id, "rejected")} disabled={updatingId === v.id}>
-                          Reject
+                          {updatingId === v.id ? "..." : "Reject"}
                         </button>
                       )}
                     </div>

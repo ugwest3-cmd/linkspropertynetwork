@@ -49,6 +49,42 @@
   background: rgba(249, 115, 22, 0.06);
 }
 
+.loginLink {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--primary) !important;
+  border: 1px solid var(--primary);
+  transition: background 0.2s, color 0.2s;
+}
+
+.loginLink:hover {
+  background: var(--primary) !important;
+  color: white !important;
+}
+
+.dashboardLink {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--secondary) !important;
+  background: rgba(0, 0, 0, 0.05);
+  transition: background 0.2s;
+}
+
+.dashboardLink:hover {
+  background: rgba(0, 0, 0, 0.10) !important;
+  color: var(--secondary) !important;
+}
+
 .toggle {
   display: none;
   background: none;

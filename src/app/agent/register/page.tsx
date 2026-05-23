@@ -64,9 +64,13 @@ export default function AgentRegisterPage() {
 
       setSubmitted(true);
       toast.success("Application submitted! We'll review and contact you within 48 hours.");
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error("Something went wrong. Please try again.");
+      if (err.code === "auth/email-already-in-use") {
+        toast.error("This email is already registered. Please login or use a different email.");
+      } else {
+        toast.error(err.message || "Something went wrong. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
