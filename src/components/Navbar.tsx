@@ -4,17 +4,8 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { Menu, X, LogIn, LayoutDashboard } from "lucide-react";
 import styles from "./Navbar.module.css";
-import { auth } from "@/lib/firebase";
-import { onAuthStateChanged, User } from "firebase/auth";
-
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
-    return () => unsub();
-  }, []);
 
   return (
     <nav className={styles.nav}>

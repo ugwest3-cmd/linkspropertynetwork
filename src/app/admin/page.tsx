@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { createClient } from "@/lib/supabase/client";
 import { ShieldCheck, Users, FileText, UserCheck } from "lucide-react";
 import styles from "./dashboard.module.css";
 
@@ -13,16 +12,28 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const fetchData = async () => {
+      const supabase = createClient();
+      
       const [v, b, d, a] = await Promise.all([
-        getDocs(collection(db, "verifications")),
-        getDocs(collection(db, "buyerRequests")),
-        getDocs(collection(db, "documentationCases")),
-        getDocs(collection(db, "agents")),
+        supabase.from("verifications").select("*", { count: "exact", head: true }),
+        supabase.from("buyerRequests").select("*", { count: "exact", head: true }),
+        supabase.from("documentationCases").select("*", { count: "exact", head: true }),
+        supabase.from("agents").select("*", { count: "exact", head: true }),
       ]);
-      setCounts({ verifications: v.size, buyers: b.size, documentation: d.size, agents: a.size });
+      setCounts({ 
+        verifications: v.count || 0, 
+        buyers: b.count || 0, 
+        documentation: d.count || 0, 
+        agents: a.count || 0 
+      });
 
-      const recent = await getDocs(query(collection(db, "verifications"), orderBy("createdAt", "desc"), limit(5)));
-      setRecentVerifications(recent.docs.map(d => ({ id: d.id, ...d.data() } as {id: string; buyerName: string; location: string; status: string; createdAt: unknown})));
+      const { data: recent } = await supabase
+        .from("verifications")
+        .select("*")
+        .order("createdAt", { ascending: false })
+        .limit(5);
+        
+      setRecentVerifications(recent || []);
     };
     fetchData();
   }, []);

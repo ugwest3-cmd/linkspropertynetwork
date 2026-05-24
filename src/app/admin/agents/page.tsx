@@ -1,13 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
-import { collection, getDocs, doc, updateDoc, orderBy, query } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 import { UserCheck, ExternalLink } from "lucide-react";
 import styles from "../table.module.css";
 
 type Agent = {
-  id: string;
+  uid: string;
   name: string;
   phone: string;
   email?: string;
@@ -27,16 +26,28 @@ export default function AgentsPage() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
-    getDocs(query(collection(db, "agents"), orderBy("createdAt", "desc")))
-      .then((snap) => setItems(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Agent))))
-      .finally(() => setLoading(false));
+    const fetchAgents = async () => {
+      const supabase = createClient();
+      try {
+        const { data } = await supabase
+          .from("agents")
+          .select("*")
+          .order("createdAt", { ascending: false });
+        setItems((data || []) as Agent[]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAgents();
   }, []);
 
-  const updateStatus = async (id: string, status: string) => {
-    setUpdatingId(id);
+  const updateStatus = async (uid: string, status: string) => {
+    setUpdatingId(uid);
     try {
-      await updateDoc(doc(db, "agents", id), { status });
-      setItems((prev) => prev.map((v) => (v.id === id ? { ...v, status } : v)));
+      const supabase = createClient();
+      const { error } = await supabase.from("agents").update({ status }).eq("uid", uid);
+      if (error) throw error;
+      setItems((prev) => prev.map((v) => (v.uid === uid ? { ...v, status } : v)));
       toast.success(`Agent ${status}`);
     } catch {
       toast.error("Update failed");
@@ -71,7 +82,7 @@ export default function AgentsPage() {
             </thead>
             <tbody>
               {items.map((v) => (
-                <tr key={v.id}>
+                <tr key={v.uid}>
                   <td>
                     <div className={styles.bold}>{v.name}</div>
                     <div className={styles.sub}>{v.email}</div>
@@ -100,13 +111,13 @@ export default function AgentsPage() {
                   <td>
                     <div className={styles.actions}>
                       {v.status !== "approved" && (
-                        <button className={`${styles.actionBtn} ${styles.green}`} onClick={() => updateStatus(v.id, "approved")} disabled={updatingId === v.id}>
-                          {updatingId === v.id ? "..." : "Approve"}
+                        <button className={`${styles.actionBtn} ${styles.green}`} onClick={() => updateStatus(v.uid, "approved")} disabled={updatingId === v.uid}>
+                          {updatingId === v.uid ? "..." : "Approve"}
                         </button>
                       )}
                       {v.status !== "rejected" && (
-                        <button className={`${styles.actionBtn} ${styles.red}`} onClick={() => updateStatus(v.id, "rejected")} disabled={updatingId === v.id}>
-                          {updatingId === v.id ? "..." : "Reject"}
+                        <button className={`${styles.actionBtn} ${styles.red}`} onClick={() => updateStatus(v.uid, "rejected")} disabled={updatingId === v.uid}>
+                          {updatingId === v.uid ? "..." : "Reject"}
                         </button>
                       )}
                     </div>

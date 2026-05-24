@@ -6,8 +6,7 @@ import Footer from "@/components/Footer";
 import { ShieldCheck, Users, ChevronRight, CheckCircle, Home, Layers, Building2, MapPin, Tag, MessageCircle, ArrowRight } from "lucide-react";
 import styles from "./about.module.css";
 import { useEffect, useState } from "react";
-import { collection, query, where, orderBy, limit, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { createClient } from "@/lib/supabase/client";
 
 type Listing = {
   id: string;
@@ -42,23 +41,22 @@ export default function AboutPage() {
   useEffect(() => {
     const fetchLatest = async () => {
       try {
-        const snap = await getDocs(
-          query(
-            collection(db, "listings"),
-            where("verified", "==", true),
-            orderBy("createdAt", "desc"),
-            limit(6)
-          )
-        );
-        const agentsSnap = await getDocs(collection(db, "agents"));
-        const agentsMap: Record<string, any> = {};
-        agentsSnap.docs.forEach((d) => { agentsMap[d.id] = d.data(); });
+        const supabase = createClient();
+        const { data: snap } = await supabase
+          .from("listings")
+          .select("*")
+          .eq("verified", true)
+          .order("createdAt", { ascending: false })
+          .limit(6);
 
-        const data = snap.docs.map((d) => ({
-          id: d.id,
-          ...d.data(),
-          agentName: agentsMap[(d.data() as any).agentId]?.name || "LPN Agent",
-          agentPhone: agentsMap[(d.data() as any).agentId]?.phone || "",
+        const { data: agentsSnap } = await supabase.from("agents").select("*");
+        const agentsMap: Record<string, any> = {};
+        (agentsSnap || []).forEach((d) => { agentsMap[d.uid] = d; });
+
+        const data = (snap || []).map((d: any) => ({
+          ...d,
+          agentName: agentsMap[d.agentId]?.name || "LPN Agent",
+          agentPhone: agentsMap[d.agentId]?.phone || "",
         })) as Listing[];
 
         setListings(data);

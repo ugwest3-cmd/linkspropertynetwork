@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { collection, getDocs, doc, updateDoc, orderBy, query } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 import { ShieldCheck, ExternalLink } from "lucide-react";
 import styles from "../table.module.css";
@@ -26,15 +25,27 @@ export default function VerificationsPage() {
   const adminWa = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP || "256700000000";
 
   useEffect(() => {
-    getDocs(query(collection(db, "verifications"), orderBy("createdAt", "desc")))
-      .then((snap) => setItems(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Verification))))
-      .finally(() => setLoading(false));
+    const fetchVerifications = async () => {
+      const supabase = createClient();
+      try {
+        const { data } = await supabase
+          .from("verifications")
+          .select("*")
+          .order("createdAt", { ascending: false });
+        setItems((data || []) as Verification[]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchVerifications();
   }, []);
 
   const updateStatus = async (id: string, status: string) => {
     setUpdatingId(id);
     try {
-      await updateDoc(doc(db, "verifications", id), { status });
+      const supabase = createClient();
+      const { error } = await supabase.from("verifications").update({ status }).eq("id", id);
+      if (error) throw error;
       setItems((prev) => prev.map((v) => (v.id === id ? { ...v, status } : v)));
       toast.success(`Status updated to "${status}"`);
     } catch {

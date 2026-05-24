@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { collection, getDocs, doc, updateDoc, orderBy, query } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 import { FileText } from "lucide-react";
 import styles from "../table.module.css";
@@ -21,15 +20,27 @@ export default function DocumentationAdminPage() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
-    getDocs(query(collection(db, "documentationCases"), orderBy("createdAt", "desc")))
-      .then((snap) => setItems(snap.docs.map((d) => ({ id: d.id, ...d.data() } as DocCase))))
-      .finally(() => setLoading(false));
+    const fetchDocs = async () => {
+      const supabase = createClient();
+      try {
+        const { data } = await supabase
+          .from("documentationCases")
+          .select("*")
+          .order("createdAt", { ascending: false });
+        setItems((data || []) as DocCase[]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDocs();
   }, []);
 
   const markCompleted = async (id: string) => {
     setUpdatingId(id);
     try {
-      await updateDoc(doc(db, "documentationCases", id), { status: "completed" });
+      const supabase = createClient();
+      const { error } = await supabase.from("documentationCases").update({ status: "completed" }).eq("id", id);
+      if (error) throw error;
       setItems((prev) => prev.map((v) => (v.id === id ? { ...v, status: "completed" } : v)));
       toast.success("Case marked as completed");
     } catch {

@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { createClient } from "@/lib/supabase/client";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -21,15 +20,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [checking, setChecking] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+  const supabase = createClient();
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
-      if (!user && !window.location.pathname.includes("/admin/login")) {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session && !window.location.pathname.includes("/admin/login")) {
         router.replace("/admin/login");
       }
       setChecking(false);
     });
-    return () => unsub();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session && !window.location.pathname.includes("/admin/login")) {
+        router.replace("/admin/login");
+      }
+      setChecking(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, [router]);
 
   if (checking) return <div className={styles.loading}>Loading...</div>;
@@ -57,7 +65,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
         <button
           className={styles.logout}
-          onClick={() => signOut(auth).then(() => router.push("/admin/login"))}
+          onClick={async () => {
+            await supabase.auth.signOut();
+            router.push("/admin/login");
+          }}
         >
           <LogOut size={16} /> Sign Out
         </button>

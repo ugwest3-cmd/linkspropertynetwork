@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { collection, getDocs, doc, updateDoc, orderBy, query } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 import { LayoutList, ExternalLink, CheckCircle, XCircle } from "lucide-react";
 import styles from "../table.module.css";
@@ -27,17 +26,16 @@ export default function AdminListingsPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const listSnap = await getDocs(
-        query(collection(db, "listings"), orderBy("createdAt", "desc"))
-      );
-      const agentsSnap = await getDocs(collection(db, "agents"));
-      const agentsMap: Record<string, string> = {};
-      agentsSnap.docs.forEach((d) => { agentsMap[d.id] = d.data().name; });
+      const supabase = createClient();
+      const { data: listSnap } = await supabase.from("listings").select("*").order("createdAt", { ascending: false });
+      const { data: agentsSnap } = await supabase.from("agents").select("*");
 
-      const listings = listSnap.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-        agentName: agentsMap[(d.data() as any).agentId] || "Unknown Agent",
+      const agentsMap: Record<string, string> = {};
+      (agentsSnap || []).forEach((d: any) => { agentsMap[d.uid] = d.name; });
+
+      const listings = (listSnap || []).map((d: any) => ({
+        ...d,
+        agentName: agentsMap[d.agentId] || "Unknown Agent",
       })) as Listing[];
 
       setItems(listings);
@@ -49,7 +47,9 @@ export default function AdminListingsPage() {
   const setVerified = async (id: string, verified: boolean) => {
     setUpdatingId(id);
     try {
-      await updateDoc(doc(db, "listings", id), { verified });
+      const supabase = createClient();
+      const { error } = await supabase.from("listings").update({ verified }).eq("id", id);
+      if (error) throw error;
       setItems((prev) =>
         prev.map((v) => (v.id === id ? { ...v, verified } : v))
       );

@@ -3,9 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { db, auth } from "@/lib/firebase";
+import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -43,30 +41,37 @@ export default function AgentRegisterPage() {
 
   const selectedPlan = watch("plan");
 
+  const supabase = createClient();
+
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-      await updateProfile(userCredential.user, { displayName: data.name });
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: { data: { full_name: data.name } }
+      });
+      if (authError) throw authError;
+
+      const user = authData.user;
+      if (!user) throw new Error("User creation failed");
 
       const slug = data.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") + "-" + Date.now().toString().slice(-4);
-
       const { password, ...agentData } = data;
 
-      await addDoc(collection(db, "agents"), {
+      const { error: dbError } = await supabase.from("agents").insert({
         ...agentData,
-        uid: userCredential.user.uid,
-        ninPhotoURL: null, // Removed field
+        uid: user.id,
         slug,
-        status: "pending",
-        createdAt: serverTimestamp(),
+        status: "pending"
       });
+      if (dbError) throw dbError;
 
       setSubmitted(true);
       toast.success("Application submitted! We'll review and contact you within 48 hours.");
     } catch (err: any) {
       console.error(err);
-      if (err.code === "auth/email-already-in-use") {
+      if (err.message && err.message.includes("already registered")) {
         toast.error("This email is already registered. Please login or use a different email.");
       } else {
         toast.error(err.message || "Something went wrong. Please try again.");

@@ -3,8 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -35,12 +34,12 @@ export default function VerifyPage() {
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      await addDoc(collection(db, "verifications"), {
+      const supabase = createClient();
+      const { error } = await supabase.from("verifications").insert({
         ...data,
-        titlePhotoURL: null, // Removed field
-        status: "pending",
-        createdAt: serverTimestamp(),
+        status: "pending"
       });
+      if (error) throw error;
 
       setSubmitted(true);
       toast.success("Request submitted! We'll contact you shortly.");

@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
+import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Plus, Home, MapPin, CheckCircle } from "lucide-react";
 import styles from "./dashboard.module.css";
@@ -25,97 +24,63 @@ export default function AgentDashboardPage() {
   const [agentSlug, setAgentSlug] = useState("");
 
   useEffect(() => {
-    const unsub = auth.onAuthStateChanged(async (user) => {
-      if (!user) {
+
+    let isMounted = true;
+    const supabase = createClient();
+
+    const fetchDashboard = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!isMounted) return;
+      if (!session) {
         setLoading(false);
         return;
       }
 
       try {
-        const res = await fetch(`https://firestore.googleapis.com/v1/projects/linkspropertynetwork-295bf/databases/(default)/documents:runQuery`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            structuredQuery: {
-              from: [{ collectionId: "agents" }],
-              where: {
-                fieldFilter: {
-                  field: { fieldPath: "uid" },
-                  op: "EQUAL",
-                  value: { stringValue: user.uid }
-                }
-              },
-              limit: 1
-            }
-          })
-        });
+        const { data: agentData, error: agentError } = await supabase
+          .from("agents")
+          .select("uid, slug")
+          .eq("uid", session.user.id)
+          .single();
 
-        if (!res.ok) throw new Error("Failed to fetch agent");
-        const data = await res.json();
-
-        if (!data || data.length === 0 || !data[0].document) {
-          setLoading(false);
+        if (agentError || !agentData) {
+          if (isMounted) setLoading(false);
           return;
         }
 
-        const agentDoc = data[0].document;
-        // The REST API document name is like projects/.../databases/(default)/documents/agents/{agentId}
-        const agentId = agentDoc.name.split("/").pop() as string;
-        setAgentSlug(agentDoc.fields.slug?.stringValue || "");
+        if (isMounted) setAgentSlug(agentData.slug || "");
 
-        // Fetch listings
-        const listingsRes = await fetch(`https://firestore.googleapis.com/v1/projects/linkspropertynetwork-295bf/databases/(default)/documents:runQuery`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            structuredQuery: {
-              from: [{ collectionId: "listings" }],
-              where: {
-                fieldFilter: {
-                  field: { fieldPath: "agentId" },
-                  op: "EQUAL",
-                  value: { stringValue: agentId }
-                }
-              }
-            }
-          })
-        });
+        const { data: listingsData, error: listingsError } = await supabase
+          .from("listings")
+          .select("*")
+          .eq("agentId", agentData.uid)
+          .order("createdAt", { ascending: false });
 
-        if (!listingsRes.ok) throw new Error("Failed to fetch listings");
-        const listingsData = await listingsRes.json();
+        if (listingsError) throw listingsError;
         
-        const parsedListings: Listing[] = [];
-        if (listingsData && listingsData.length > 0 && listingsData[0].document) {
-          for (const item of listingsData) {
-            if (item.document) {
-              const docId = item.document.name.split("/").pop() as string;
-              const f = item.document.fields;
-              
-              parsedListings.push({
-                id: docId,
-                title: f.title?.stringValue || "",
-                type: f.type?.stringValue || "",
-                price: f.price?.stringValue || "",
-                location: f.location?.stringValue || "",
-                description: f.description?.stringValue || "",
-                agentId: f.agentId?.stringValue || "",
-                photos: f.photos?.arrayValue?.values?.map((v: any) => v.stringValue) || [],
-                verified: f.verified?.booleanValue || false,
-                createdAt: f.createdAt?.timestampValue || null,
-              });
-            }
-          }
+        if (isMounted) {
+          setListings((listingsData || []) as Listing[]);
+          setLoading(false);
         }
-        
-        setListings(parsedListings);
-        setLoading(false);
       } catch (err) {
         console.error(err);
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchDashboard();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session && isMounted) {
         setLoading(false);
       }
     });
 
-    return () => unsub();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return (

@@ -1,8 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
+import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -13,60 +11,39 @@ export default function AgentDashboardLayout({ children }: { children: React.Rea
   const [status, setStatus] = useState<string | null>(null);
   const router = useRouter();
 
+  const supabase = createClient();
+
   useEffect(() => {
     let isMounted = true;
     
-    const unsub = onAuthStateChanged(auth, async (user) => {
+    const checkAuthAndAgent = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
       if (!isMounted) return;
       
-      if (!user) {
+      if (!session) {
         setLoading(false);
         router.replace("/agent/login");
         return;
       }
 
       try {
-        // Use standard HTTP REST API to completely bypass Firebase SDK WebSocket/Long-Polling bugs
-        const res = await fetch(`https://firestore.googleapis.com/v1/projects/linkspropertynetwork-295bf/databases/(default)/documents:runQuery`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          cache: "no-store",
-          body: JSON.stringify({
-            structuredQuery: {
-              from: [{ collectionId: "agents" }],
-              where: {
-                fieldFilter: {
-                  field: { fieldPath: "uid" },
-                  op: "EQUAL",
-                  value: { stringValue: user.uid }
-                }
-              },
-              limit: 1
-            }
-          })
-        });
+        const { data, error } = await supabase
+          .from("agents")
+          .select("status")
+          .eq("uid", session.user.id)
+          .single();
 
-        if (!res.ok) {
-          throw new Error("Failed to fetch from REST API");
-        }
-
-        const data = await res.json();
-        
         if (!isMounted) return;
 
-        // Firestore REST API returns an array of results. If no match, it returns an array with one item having only `readTime`
-        if (!data || data.length === 0 || !data[0].document) {
-          await auth.signOut();
+        if (error || !data) {
+          await supabase.auth.signOut();
           setLoading(false);
           router.replace("/agent/login");
           return;
         }
 
-        // Extract fields from Firestore REST API format
-        const fields = data[0].document.fields;
-        const statusVal = fields.status?.stringValue || "pending";
-        
-        setStatus(statusVal);
+        setStatus(data.status || "pending");
         setLoading(false);
       } catch (err: any) {
         console.error("Setup error:", err);
@@ -74,6 +51,14 @@ export default function AgentDashboardLayout({ children }: { children: React.Rea
           setStatus("error");
           setLoading(false);
         }
+      }
+    };
+
+    checkAuthAndAgent();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session && !window.location.pathname.includes("/agent/login")) {
+        router.replace("/agent/login");
       }
     });
 
@@ -86,7 +71,7 @@ export default function AgentDashboardLayout({ children }: { children: React.Rea
 
     return () => {
       isMounted = false;
-      unsub();
+      subscription.unsubscribe();
       clearTimeout(timeout);
     };
   }, [router]);

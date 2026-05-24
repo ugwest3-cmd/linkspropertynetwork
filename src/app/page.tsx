@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { createClient } from "@/lib/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Search, MapPin, Tag, Home, Layers, Building2, SlidersHorizontal, MessageCircle, X } from "lucide-react";
@@ -49,28 +48,30 @@ export default function MarketplacePage() {
   useEffect(() => {
     const fetchListings = async () => {
       try {
+        const supabase = createClient();
+        
         // Fetch verified listings
-        const listingsSnap = await getDocs(
-          query(
-            collection(db, "listings"),
-            where("verified", "==", true),
-            orderBy("createdAt", "desc")
-          )
-        );
+        const { data: rawListings, error: listingsError } = await supabase
+          .from("listings")
+          .select("*")
+          .eq("verified", true)
+          .order("createdAt", { ascending: false });
 
-        const rawListings = listingsSnap.docs.map((d) => ({
-          id: d.id,
-          ...d.data(),
-        })) as Listing[];
+        if (listingsError) throw listingsError;
 
         // Fetch all agents to enrich listings with agent info
-        const agentsSnap = await getDocs(collection(db, "agents"));
+        const { data: agentsData, error: agentsError } = await supabase
+          .from("agents")
+          .select("*");
+
+        if (agentsError) throw agentsError;
+
         const agentsMap: Record<string, any> = {};
-        agentsSnap.docs.forEach((d) => {
-          agentsMap[d.id] = d.data();
+        agentsData.forEach((d) => {
+          agentsMap[d.uid] = d;
         });
 
-        const enriched = rawListings.map((l) => ({
+        const enriched = (rawListings || []).map((l: any) => ({
           ...l,
           agentName: agentsMap[l.agentId]?.name || "LPN Agent",
           agentPhone: agentsMap[l.agentId]?.phone || "",

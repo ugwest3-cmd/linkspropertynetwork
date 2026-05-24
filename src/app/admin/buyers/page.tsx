@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { collection, getDocs, doc, updateDoc, orderBy, query } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 import { Users } from "lucide-react";
 import styles from "../table.module.css";
@@ -24,15 +23,27 @@ export default function BuyersPage() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
-    getDocs(query(collection(db, "buyerRequests"), orderBy("createdAt", "desc")))
-      .then((snap) => setItems(snap.docs.map((d) => ({ id: d.id, ...d.data() } as BuyerRequest))))
-      .finally(() => setLoading(false));
+    const fetchBuyers = async () => {
+      const supabase = createClient();
+      try {
+        const { data } = await supabase
+          .from("buyerRequests")
+          .select("*")
+          .order("createdAt", { ascending: false });
+        setItems((data || []) as BuyerRequest[]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBuyers();
   }, []);
 
   const updateStatus = async (id: string, status: string) => {
     setUpdatingId(id);
     try {
-      await updateDoc(doc(db, "buyerRequests", id), { status });
+      const supabase = createClient();
+      const { error } = await supabase.from("buyerRequests").update({ status }).eq("id", id);
+      if (error) throw error;
       setItems((prev) => prev.map((v) => (v.id === id ? { ...v, status } : v)));
       toast.success(`Status updated to "${status}"`);
     } catch {

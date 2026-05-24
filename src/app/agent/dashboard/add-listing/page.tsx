@@ -3,8 +3,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { collection, addDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
+import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { Upload, ChevronLeft, Save } from "lucide-react";
@@ -32,20 +31,33 @@ export default function AddListingPage() {
   });
 
   useEffect(() => {
-    const unsub = auth.onAuthStateChanged(async (user) => {
-      if (!user) return;
+    const supabase = createClient();
+    const fetchAgentId = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
       
-      try {
-        const q = query(collection(db, "agents"), where("uid", "==", user.uid));
-        const snap = await getDocs(q);
-        if (!snap.empty) {
-          setAgentId(snap.docs[0].id);
-        }
-      } catch (err) {
-        console.error("Error fetching agent mapping:", err);
+      const { data: agentData } = await supabase
+        .from("agents")
+        .select("uid")
+        .eq("uid", session.user.id)
+        .single();
+        
+      if (agentData) {
+        setAgentId(agentData.uid);
+      }
+    };
+    
+    fetchAgentId();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        setAgentId(null);
+      } else {
+        fetchAgentId();
       }
     });
-    return () => unsub();
+    
+    return () => subscription.unsubscribe();
   }, []);
 
   const onSubmit = async (data: FormData) => {
@@ -76,14 +88,15 @@ export default function AddListingPage() {
       const uploadData = await uploadRes.json();
       photoUrl = uploadData.url;
 
-      // 2. Save Listing to Firestore
-      await addDoc(collection(db, "listings"), {
+      // 2. Save Listing to Supabase
+      const supabase = createClient();
+      const { error } = await supabase.from("listings").insert({
         ...data,
         agentId,
         photos: [photoUrl],
-        verified: false,
-        createdAt: serverTimestamp()
+        verified: false
       });
+      if (error) throw error;
 
       toast.success("Listing created! Waiting for Admin verification.");
       router.push("/agent/dashboard");

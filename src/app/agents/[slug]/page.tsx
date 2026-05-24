@@ -1,5 +1,4 @@
-import { collection, query, where, getDocs, limit } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { MapPin, Phone, CheckCircle, Home, Image as ImageIcon } from "lucide-react";
@@ -8,26 +7,31 @@ import { notFound } from "next/navigation";
 
 // Optional: if using App Router with async components
 export default async function AgentProfilePage({ params }: { params: { slug: string } }) {
-  const { slug } = params;
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const resolvedParams = await params;
+  const { slug } = resolvedParams;
+  const supabase = await createClient();
 
   // Fetch Agent
-  const agentsRef = collection(db, "agents");
-  const q = query(agentsRef, where("slug", "==", slug), where("status", "==", "approved"), limit(1));
-  const agentSnapshot = await getDocs(q);
+  const { data: agent, error: agentError } = await supabase
+    .from("agents")
+    .select("*")
+    .eq("slug", slug)
+    .eq("status", "approved")
+    .single();
 
-  if (agentSnapshot.empty) {
+  if (agentError || !agent) {
     notFound();
   }
 
-  const agent = agentSnapshot.docs[0].data() as any;
-  const agentId = agentSnapshot.docs[0].id;
-
   // Fetch Listings
-  const listingsRef = collection(db, "listings");
-  const listingQ = query(listingsRef, where("agentId", "==", agentId));
-  const listingSnapshot = await getDocs(listingQ);
+  const { data: listingsData } = await supabase
+    .from("listings")
+    .select("*")
+    .eq("agentId", agent.uid);
   
-  const listings = listingSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+  const listings = listingsData || [];
 
   return (
     <>
