@@ -26,12 +26,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session && !window.location.pathname.includes("/admin/login")) {
         router.replace("/admin/login");
+      } else if (session && !session.user.email?.includes("admin@") && !window.location.pathname.includes("/admin/login")) {
+        // If logged in but not an admin, sign out and redirect
+        supabase.auth.signOut();
+        router.replace("/admin/login");
       }
       setChecking(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session && !window.location.pathname.includes("/admin/login")) {
+        router.replace("/admin/login");
+      } else if (session && !session.user.email?.includes("admin@") && !window.location.pathname.includes("/admin/login")) {
+        supabase.auth.signOut();
         router.replace("/admin/login");
       }
       setChecking(false);
