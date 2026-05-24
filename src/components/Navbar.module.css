@@ -115,5 +115,26 @@
   .links.open { display: flex; }
 
   .links li { width: 100%; }
-  .links li a { display: block; padding: 0.6rem 0.5rem; }
+  .links li a, .logoutBtn { display: block; padding: 0.6rem 0.5rem; width: 100%; text-align: left; }
+}
+
+.logoutBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 0.5rem;
+  transition: background 0.2s, color 0.2s;
+  font-family: inherit;
+}
+
+.logoutBtn:hover {
+  background: #fee2e2;
+  color: #dc2626;
 }

@@ -34,17 +34,13 @@ export default function Footer() {
           <h4>For Agents</h4>
           <ul>
             <li>
-              <Link href="/agent/register" className={styles.footerHighlight}>
-                <TrendingUp size={14} /> Agent Tools
-              </Link>
+              <Link href="/agent/register">Agent Registration</Link>
             </li>
             <li>
               <Link href="/agent/login">Agent Login</Link>
             </li>
             <li>
-              <Link href="/documentation" className={styles.footerHighlight}>
-                <FileText size={14} /> Documentation Help
-              </Link>
+              <Link href="/documentation">Documentation Help</Link>
             </li>
           </ul>
         </div>

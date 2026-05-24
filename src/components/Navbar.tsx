@@ -2,10 +2,28 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { Menu, X, LogIn, LayoutDashboard } from "lucide-react";
+import { Menu, X, LogOut } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 import styles from "./Navbar.module.css";
+
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [session, setSession] = useState<any>(null);
+  const router = useRouter();
+  const supabase = createClient();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess) => setSession(sess));
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setOpen(false);
+    router.push("/");
+  };
 
   return (
     <nav className={styles.nav}>
@@ -16,12 +34,24 @@ export default function Navbar() {
         </Link>
 
         <ul className={`${styles.links} ${open ? styles.open : ""}`}>
+          <li><Link href="/find-property" onClick={() => setOpen(false)}>Find Property</Link></li>
           <li><Link href="/verify" onClick={() => setOpen(false)}>Verify Title</Link></li>
           <li><Link href="/about" onClick={() => setOpen(false)}>About Us</Link></li>
-          <li><Link href="/find-property" onClick={() => setOpen(false)}>Find Property</Link></li>
+          
+          {session && (
+            <>
+              <li><Link href={session.user?.email?.includes("admin@") ? "/admin" : "/agent/dashboard"} onClick={() => setOpen(false)}>Dashboard</Link></li>
+              <li>
+                <button onClick={handleSignOut} className={styles.logoutBtn}>
+                  <LogOut size={16} /> Sign Out
+                </button>
+              </li>
+            </>
+          )}
+
           <li>
             <a
-              href={`https://wa.me/${process.env.NEXT_PUBLIC_ADMIN_WHATSAPP}?text=Hello%20Links%20Property%20Network`}
+              href={`https://wa.me/${process.env.NEXT_PUBLIC_ADMIN_WHATSAPP || "256700000000"}?text=Hello%20Links%20Property%20Network`}
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-primary"

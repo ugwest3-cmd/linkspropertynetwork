@@ -396,8 +396,20 @@
 .empty h3 { font-size: 1.25rem; color: var(--foreground); }
 .empty p  { font-size: 0.95rem; }
 
-/* ===== RESPONSIVE ===== */
 @media (max-width: 640px) {
+  .hero { padding: 3rem 0 2rem; }
+  .heroText h1 { font-size: 2rem; line-height: 1.2; }
+  
+  .searchBar {
+    flex-direction: column;
+    padding: 1rem;
+    gap: 1rem;
+    border-radius: calc(var(--radius) * 1.5);
+  }
+  .searchIcon { display: none; }
+  .searchInput { width: 100%; text-align: center; }
+  .filterToggle { width: 100%; justify-content: center; padding: 0.75rem; }
+  
   .cards {
     grid-template-columns: 1fr;
   }

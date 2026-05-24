@@ -136,7 +136,6 @@ export default function MarketplacePage() {
         <section className={styles.hero}>
           <div className={`container ${styles.heroInner}`}>
             <div className={styles.heroText}>
-              <span className={styles.heroBadge}>🏡 Live Listings</span>
               <h1>Property Marketplace</h1>
               <p>Browse verified real estate listings posted by our network of trusted agents across Uganda.</p>
             </div>
