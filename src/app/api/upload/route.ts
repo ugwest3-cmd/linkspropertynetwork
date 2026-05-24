@@ -1,11 +1,5 @@
 import { NextResponse } from "next/server";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import { createClient } from "@supabase/supabase-js";
 
 export async function POST(req: Request) {
   try {
@@ -16,20 +10,30 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder";
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const result: any = await new Promise((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
-        { folder: "linkspropertynetwork" },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      ).end(buffer);
-    });
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${crypto.randomUUID()}.${fileExt}`;
 
-    return NextResponse.json({ url: result.secure_url });
+    const { data, error } = await supabase.storage
+      .from('listings')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (error) {
+      console.error(error);
+      return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from('listings')
+      .getPublicUrl(fileName);
+
+    return NextResponse.json({ url: publicUrlData.publicUrl });
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
