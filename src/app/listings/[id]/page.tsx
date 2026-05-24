@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -8,8 +8,10 @@ import Link from "next/link";
 import styles from "./listing.module.css";
 import { notFound } from "next/navigation";
 
-// @ts-ignore
-export default function ListingPage({ params }: { params: { id: string } }) {
+export default function ListingPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
+  const id = resolvedParams.id;
+  
   const [listing, setListing] = useState<any>(null);
   const [agent, setAgent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -17,8 +19,6 @@ export default function ListingPage({ params }: { params: { id: string } }) {
   const [currentUrl, setCurrentUrl] = useState("");
 
   useEffect(() => {
-    // @ts-ignore
-    const id = params.id;
     setCurrentUrl(window.location.href);
 
     const fetchData = async () => {
@@ -48,7 +48,7 @@ export default function ListingPage({ params }: { params: { id: string } }) {
     };
 
     fetchData();
-  }, [params.id]);
+  }, [id]);
 
   if (loading) {
     return <div style={{ padding: "5rem", textAlign: "center" }}>Loading property details...</div>;
