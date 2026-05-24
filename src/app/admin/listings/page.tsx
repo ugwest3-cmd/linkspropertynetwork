@@ -61,6 +61,22 @@ export default function AdminListingsPage() {
     }
   };
 
+  const deleteListing = async (id: string) => {
+    if (!confirm("Are you sure you want to permanently delete this listing?")) return;
+    setUpdatingId(id);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.from("listings").delete().eq("id", id);
+      if (error) throw error;
+      setItems((prev) => prev.filter((v) => v.id !== id));
+      toast.success("Listing deleted successfully");
+    } catch {
+      toast.error("Failed to delete listing");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   return (
     <div>
       <div className={styles.pageHeader}>
@@ -134,6 +150,14 @@ export default function AdminListingsPage() {
                           <XCircle size={14} /> {updatingId === item.id ? "..." : "Unpublish"}
                         </button>
                       )}
+                      <button 
+                        className={`${styles.actionBtn}`} 
+                        style={{ background: "#fee2e2", color: "#dc2626", borderColor: "#fca5a5" }} 
+                        onClick={() => deleteListing(item.id)} 
+                        disabled={updatingId === item.id}
+                      >
+                        {updatingId === item.id ? "..." : "Delete"}
+                      </button>
                     </div>
                   </td>
                 </tr>

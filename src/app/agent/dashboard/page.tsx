@@ -22,6 +22,7 @@ export default function AgentDashboardPage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [agentSlug, setAgentSlug] = useState("");
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
 
@@ -83,6 +84,22 @@ export default function AgentDashboardPage() {
     };
   }, []);
 
+  const deleteListing = async (id: string) => {
+    if (!confirm("Are you sure you want to completely remove this listing?")) return;
+    setUpdatingId(id);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.from("listings").delete().eq("id", id);
+      if (error) throw error;
+      setListings((prev) => prev.filter((v) => v.id !== id));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete listing.");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   return (
     <div className="container" style={{ padding: "3rem 1rem" }}>
       <div className={styles.header}>
@@ -139,6 +156,7 @@ export default function AgentDashboardPage() {
                 <th>Price</th>
                 <th>Location</th>
                 <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -152,10 +170,20 @@ export default function AgentDashboardPage() {
                   <td><MapPin size={14} style={{ display: "inline", marginRight: "4px"}}/>{listing.location}</td>
                   <td>
                     {listing.verified ? (
-                      <span className="badge badge-verified"><CheckCircle size={12} style={{ display: "inline", marginRight: "4px"}}/> Verified</span>
+                      <span className="badge badge-verified"><CheckCircle size={12} style={{ display: "inline", marginRight: "4px"}}/> Published</span>
                     ) : (
                       <span className="badge badge-pending">Pending Review</span>
                     )}
+                  </td>
+                  <td>
+                    <button 
+                      className="btn" 
+                      style={{ background: "#fee2e2", color: "#dc2626", borderColor: "#fca5a5", padding: "0.25rem 0.5rem", fontSize: "0.8rem", minWidth: "70px" }} 
+                      onClick={() => deleteListing(listing.id)}
+                      disabled={updatingId === listing.id}
+                    >
+                      {updatingId === listing.id ? "..." : "Remove"}
+                    </button>
                   </td>
                 </tr>
               ))}

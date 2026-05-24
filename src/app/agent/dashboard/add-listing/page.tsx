@@ -94,11 +94,11 @@ export default function AddListingPage() {
         ...data,
         agentId,
         photos: [photoUrl],
-        verified: false
+        verified: true
       });
       if (error) throw error;
 
-      toast.success("Listing created! Waiting for Admin verification.");
+      toast.success("Listing created and published to the marketplace!");
       router.push("/agent/dashboard");
     } catch (err: any) {
       console.error(err);
@@ -115,7 +115,7 @@ export default function AddListingPage() {
           <ChevronLeft size={16} /> Back to Dashboard
         </Link>
         <h1 style={{ fontSize: "2rem" }}>Add New Listing</h1>
-        <p style={{ color: "var(--text-muted)" }}>Listings require admin verification before appearing publically.</p>
+        <p style={{ color: "var(--text-muted)" }}>Your listing will go live immediately after submission.</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className={styles.formContainer}>
@@ -180,7 +180,7 @@ export default function AddListingPage() {
 
         <div style={{ marginTop: "2rem", display: "flex", justifyContent: "flex-end" }}>
           <button type="submit" className="btn btn-primary" disabled={loading} style={{ padding: "0.8rem 2rem", fontSize: "1rem" }}>
-            {loading ? "Saving..." : <><Save size={18}/> Submit for Verification</>}
+            {loading ? "Publishing..." : <><Save size={18}/> Publish Listing</>}
           </button>
         </div>
       </form>
