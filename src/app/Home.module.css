@@ -419,6 +419,13 @@
     align-items: flex-start;
   }
 
-  .cardActions { width: 100%; }
-  .waBtn { flex: 1; justify-content: center; }
+  .cardActions { 
+    width: 100%; 
+    flex-wrap: wrap;
+  }
+  .cardActions > * {
+    flex: 1 1 30%;
+    justify-content: center;
+    text-align: center;
+  }
 }
