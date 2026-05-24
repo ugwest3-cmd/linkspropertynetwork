@@ -21,7 +21,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export default function AddListingPage() {
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [agentId, setAgentId] = useState<string | null>(null);
   const router = useRouter();
@@ -61,8 +61,12 @@ export default function AddListingPage() {
   }, []);
 
   const onSubmit = async (data: FormData) => {
-    if (!photoFile) {
+    if (photoFiles.length === 0) {
       toast.error("Please upload at least one feature photo.");
+      return;
+    }
+    if (photoFiles.length > 3) {
+      toast.error("You can upload a maximum of 3 photos.");
       return;
     }
     if (!agentId) {
@@ -71,29 +75,29 @@ export default function AddListingPage() {
     }
 
     setLoading(true);
-    let photoUrl = "";
 
     try {
-      // 1. Upload photo to Cloudinary API Route
-      const formData = new FormData();
-      formData.append("file", photoFile);
-
-      const uploadRes = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!uploadRes.ok) throw new Error("Image upload failed");
-      
-      const uploadData = await uploadRes.json();
-      photoUrl = uploadData.url;
+      // 1. Upload photos to Cloudinary API Route
+      const photoUrls = await Promise.all(
+        photoFiles.map(async (file) => {
+          const formData = new FormData();
+          formData.append("file", file);
+          const uploadRes = await fetch("/api/upload", {
+            method: "POST",
+            body: formData,
+          });
+          if (!uploadRes.ok) throw new Error("Image upload failed");
+          const uploadData = await uploadRes.json();
+          return uploadData.url;
+        })
+      );
 
       // 2. Save Listing to Supabase
       const supabase = createClient();
       const { error } = await supabase.from("listings").insert({
         ...data,
         agentId,
-        photos: [photoUrl],
+        photos: photoUrls,
         verified: true
       });
       if (error) throw error;
@@ -163,18 +167,38 @@ export default function AddListingPage() {
           <h2 style={{ fontSize: "1.25rem", marginBottom: "1.5rem" }}>Property Media</h2>
           
           <div className="form-group">
-            <label className="label">Cover Photo *</label>
+            <label className="label">Photos (Up to 3) *</label>
             <label className={styles.uploadArea}>
               <Upload size={24} color="var(--primary)" style={{ marginBottom: "0.5rem" }}/>
-              <span style={{ fontWeight: 500 }}>{photoFile ? photoFile.name : "Click to select property image"}</span>
+              <span style={{ fontWeight: 500 }}>
+                {photoFiles.length > 0 ? `${photoFiles.length} photo(s) selected` : "Click to select property images"}
+              </span>
               <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>JPG, PNG up to 5MB</span>
               <input 
                 type="file" 
                 accept="image/*" 
-                onChange={(e) => setPhotoFile(e.target.files?.[0] || null)} 
+                multiple
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []);
+                  if (files.length > 3) {
+                    toast.error("You can upload a maximum of 3 photos.");
+                    setPhotoFiles(files.slice(0, 3));
+                  } else {
+                    setPhotoFiles(files);
+                  }
+                }} 
                 style={{ display: "none" }}
               />
             </label>
+            {photoFiles.length > 0 && (
+              <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                {photoFiles.map((file, i) => (
+                  <div key={i} style={{ fontSize: "0.8rem", background: "#f1f5f9", padding: "0.25rem 0.5rem", borderRadius: "4px" }}>
+                    {file.name}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

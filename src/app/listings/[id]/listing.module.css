@@ -1,0 +1,134 @@
+.main {
+  padding: 3rem 0;
+  background: var(--background);
+  min-height: 100vh;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+}
+
+.gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mainPhoto {
+  width: 100%;
+  height: 400px;
+  object-fit: cover;
+  border-radius: var(--radius);
+}
+
+.thumbnails {
+  display: flex;
+  gap: 1rem;
+}
+
+.thumb {
+  width: 100px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: calc(var(--radius) / 2);
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+
+.thumbActive {
+  border-color: var(--primary);
+}
+
+.infoCard {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  margin-top: 2rem;
+}
+
+.titleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.titleRow h1 {
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+.price {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.meta {
+  display: flex;
+  gap: 1rem;
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.agentCard {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.agentCard h3 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1.2rem;
+}
+
+.shareCard {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+
+.shareButtons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.shareBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+.shareWa { background: #25D366; }
+.shareFb { background: #1877F2; }
+.shareX { background: #000000; }
+
+@media (max-width: 768px) {
+  .layout { grid-template-columns: 1fr; }
+  .titleRow { flex-direction: column; }
+  .mainPhoto { height: 250px; }
+}

@@ -107,12 +107,21 @@ export default function AgentDashboardPage() {
           <h1 style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>My Dashboard</h1>
           <p style={{ color: "var(--text-muted)" }}>Manage your listings and profile.</p>
         </div>
-        <div style={{ display: "flex", gap: "1rem" }}>
+        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
           {agentSlug && (
-            <a href={`/agents/${agentSlug}`} target="_blank" rel="noopener noreferrer" className="btn btn-outline">
-              View Public Page
-            </a>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(`https://linkspropertynetwork.vercel.app/agents/${agentSlug}`);
+                alert("Public Profile Link copied to clipboard!");
+              }}
+              className="btn btn-outline"
+            >
+              Copy Public Link
+            </button>
           )}
+          <Link href="/agent/dashboard/profile" className="btn btn-outline">
+            Edit Profile
+          </Link>
           <Link href="/agent/dashboard/add-listing" className="btn btn-primary">
             <Plus size={18} /> Add New Listing
           </Link>

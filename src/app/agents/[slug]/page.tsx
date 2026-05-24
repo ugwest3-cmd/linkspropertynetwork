@@ -1,9 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { MapPin, Phone, CheckCircle, Home, Image as ImageIcon } from "lucide-react";
+import { MapPin, Phone, CheckCircle, Home, Image as ImageIcon, Share2 } from "lucide-react";
 import styles from "./agentProfile.module.css";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 
 // Optional: if using App Router with async components
 export default async function AgentProfilePage({ params }: { params: { slug: string } }) {
@@ -90,15 +91,25 @@ export default async function AgentProfilePage({ params }: { params: { slug: str
                        <h3>{listing.title}</h3>
                        <div className={styles.listingLoc}><MapPin size={14}/> {listing.location}</div>
                        <div className={styles.listingPrice}>{listing.price}</div>
-                       <a
-                          href={`https://wa.me/256${agent.phone.replace(/^0/, "").replace(/\s/g, "")}?text=Hello%20${encodeURIComponent(agent.name)}%2C%20I%20am%20interested%20in%20your%20listing:%20${encodeURIComponent(listing.title)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`btn btn-outline ${styles.listingBtn}`}
-                          style={{ width: "100%", justifyContent: "center" }}
-                        >
-                          Inquire Details
-                        </a>
+                       <div style={{ display: "flex", gap: "0.5rem", width: "100%" }}>
+                         <Link
+                           href={`/listings/${listing.id}`}
+                           className={`btn btn-outline ${styles.listingBtn}`}
+                           style={{ padding: "0.5rem", flexShrink: 0 }}
+                           title="Share Property"
+                         >
+                           <Share2 size={16} />
+                         </Link>
+                         <a
+                            href={`https://wa.me/256${agent.phone.replace(/^0/, "").replace(/\s/g, "")}?text=Hello%20${encodeURIComponent(agent.name)}%2C%20I%20am%20interested%20in%20your%20listing:%20${encodeURIComponent(listing.title)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`btn btn-outline ${styles.listingBtn}`}
+                            style={{ flex: 1, justifyContent: "center" }}
+                          >
+                            Inquire Details
+                          </a>
+                       </div>
                      </div>
                    </div>
                  ))}

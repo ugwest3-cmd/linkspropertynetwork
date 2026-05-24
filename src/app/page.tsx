@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Search, MapPin, Tag, Home, Layers, Building2, SlidersHorizontal, MessageCircle, X } from "lucide-react";
+import { Search, MapPin, Tag, Home, Layers, Building2, SlidersHorizontal, MessageCircle, X, Share2 } from "lucide-react";
 import Link from "next/link";
 import styles from "./Home.module.css";
 
@@ -275,6 +275,14 @@ export default function MarketplacePage() {
                         </div>
 
                         <div className={styles.cardActions}>
+                          <Link
+                            href={`/listings/${listing.id}`}
+                            className={`btn btn-outline ${styles.waBtn}`}
+                            style={{ padding: "0.4rem" }}
+                            title="View & Share Property"
+                          >
+                            <Share2 size={15} /> Share
+                          </Link>
                           {listing.agentSlug && (
                             <Link href={`/agents/${listing.agentSlug}`} className={styles.viewAgent}>
                               View Agent
