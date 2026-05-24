@@ -11,7 +11,8 @@ export async function POST(req: Request) {
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder";
+    // Use service role key to bypass RLS and allow unrestricted server-side uploads
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder";
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const fileExt = file.name.split('.').pop();
