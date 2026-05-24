@@ -24,13 +24,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
-      if (!user && pathname !== "/admin/login") {
+      if (!user && !window.location.pathname.includes("/admin/login")) {
         router.replace("/admin/login");
       }
       setChecking(false);
     });
     return () => unsub();
-  }, [router, pathname]);
+  }, [router]);
 
   if (checking) return <div className={styles.loading}>Loading...</div>;
 

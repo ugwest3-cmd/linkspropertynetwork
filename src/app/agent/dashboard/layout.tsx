@@ -30,6 +30,7 @@ export default function AgentDashboardLayout({ children }: { children: React.Rea
         const res = await fetch(`https://firestore.googleapis.com/v1/projects/linkspropertynetwork-295bf/databases/(default)/documents:runQuery`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          cache: "no-store",
           body: JSON.stringify({
             structuredQuery: {
               from: [{ collectionId: "agents" }],
@@ -77,9 +78,9 @@ export default function AgentDashboardLayout({ children }: { children: React.Rea
     });
 
     const timeout = setTimeout(() => {
-      if (isMounted && loading) {
+      if (isMounted) {
         setLoading(false);
-        setStatus("timeout");
+        setStatus((prev) => prev || "timeout");
       }
     }, 8000);
 
@@ -88,7 +89,7 @@ export default function AgentDashboardLayout({ children }: { children: React.Rea
       unsub();
       clearTimeout(timeout);
     };
-  }, [router, loading]);
+  }, [router]);
 
   if (loading) {
     return <div style={{ display:"flex", height:"100vh", alignItems:"center", justifyContent:"center"}}>Loading Dashboard...</div>;
