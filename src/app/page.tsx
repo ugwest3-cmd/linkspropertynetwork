@@ -46,6 +46,24 @@ export default function MarketplacePage() {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   useEffect(() => {
+    const checkAuthCode = async () => {
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get("code");
+      if (code) {
+        const supabase = createClient();
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (!error) {
+          // Clear the code from the URL so it doesn't try to exchange it again
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } else {
+          console.error("Auth code exchange error:", error);
+        }
+      }
+    };
+    checkAuthCode();
+  }, []);
+
+  useEffect(() => {
     const fetchListings = async () => {
       try {
         const supabase = createClient();
