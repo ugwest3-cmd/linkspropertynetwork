@@ -1,35 +1,56 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, PlusSquare, User } from "lucide-react";
+import { Home, Search, PlusCircle, User, LayoutGrid } from "lucide-react";
 import styles from "./BottomNav.module.css";
+import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const [isAgent, setIsAgent] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) setIsAgent(true);
+    });
+  }, []);
+
+  const isActive = (path: string) =>
+    path === "/" ? pathname === "/" : pathname.startsWith(path);
 
   return (
-    <div className={styles.bottomNav}>
-      <Link href="/" className={`${styles.navItem} ${pathname === "/" ? styles.active : ""}`}>
-        <Home size={24} />
+    <nav className={styles.bottomNav}>
+      <Link href="/" className={`${styles.navItem} ${isActive("/") ? styles.active : ""}`}>
+        <Home size={22} strokeWidth={isActive("/") ? 2.5 : 1.8} />
         <span>Home</span>
       </Link>
-      
-      <Link href="/find-property" className={`${styles.navItem} ${pathname === "/find-property" ? styles.active : ""}`}>
-        <Search size={24} />
+
+      <Link href="/find-property" className={`${styles.navItem} ${isActive("/find-property") ? styles.active : ""}`}>
+        <Search size={22} strokeWidth={isActive("/find-property") ? 2.5 : 1.8} />
         <span>Search</span>
       </Link>
 
-      <Link href="/agent/dashboard/add-listing" className={`${styles.navItem} ${styles.postItem} ${pathname === "/agent/dashboard/add-listing" ? styles.active : ""}`}>
-        <div className={styles.postIconWrapper}>
-          <PlusSquare size={24} />
+      {/* Elevated center POST button */}
+      <Link href="/agent/dashboard/add-listing" className={styles.postItem}>
+        <div className={styles.postBubble}>
+          <PlusCircle size={28} strokeWidth={2} />
         </div>
         <span>Post</span>
       </Link>
 
-      <Link href="/agent/dashboard" className={`${styles.navItem} ${pathname.startsWith("/agent/dashboard") && pathname !== "/agent/dashboard/add-listing" ? styles.active : ""}`}>
-        <User size={24} />
-        <span>Profile</span>
-      </Link>
-    </div>
+      {isAgent ? (
+        <Link href="/agent/dashboard" className={`${styles.navItem} ${isActive("/agent/dashboard") && !isActive("/agent/dashboard/add-listing") ? styles.active : ""}`}>
+          <LayoutGrid size={22} strokeWidth={isActive("/agent/dashboard") ? 2.5 : 1.8} />
+          <span>Dashboard</span>
+        </Link>
+      ) : (
+        <Link href="/agent/login" className={`${styles.navItem} ${isActive("/agent/login") ? styles.active : ""}`}>
+          <User size={22} strokeWidth={1.8} />
+          <span>Sign In</span>
+        </Link>
+      )}
+    </nav>
   );
 }

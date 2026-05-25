@@ -1,14 +1,17 @@
+/* BottomNav — Mobile Only */
 .bottomNav {
-  display: none; /* Hidden on desktop */
+  display: none;
   position: fixed;
   bottom: 0;
   left: 0;
-  width: 100%;
-  background: white;
+  right: 0;
+  background: #fff;
   border-top: 1px solid var(--border);
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-  z-index: 100;
-  padding-bottom: env(safe-area-inset-bottom); /* iOS support */
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  z-index: 200;
+  padding-bottom: env(safe-area-inset-bottom);
+  height: 64px;
+  align-items: stretch;
 }
 
 .navItem {
@@ -16,36 +19,66 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.2rem;
-  color: var(--text-muted);
-  font-size: 0.75rem;
+  gap: 3px;
+  color: #94a3b8;
+  font-size: 0.68rem;
   font-weight: 500;
-  padding: 0.6rem 0;
-  width: 100%;
-  transition: color 0.2s;
+  flex: 1;
+  padding: 0.4rem 0;
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .navItem.active {
   color: var(--primary);
 }
 
-.postItem {
-  color: var(--primary);
+.navItem.active svg {
+  filter: drop-shadow(0 0 4px rgba(249, 115, 22, 0.3));
 }
 
-.postIconWrapper {
+/* Elevated center post button */
+.postItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3px;
+  flex: 1;
+  padding-top: 0;
+  color: var(--primary);
+  font-size: 0.68rem;
+  font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+  padding-bottom: 0.4rem;
+}
+
+.postBubble {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(249, 115, 22, 0.1);
-  padding: 0.4rem;
-  border-radius: 0.5rem;
-  margin-bottom: -0.2rem;
+  background: var(--primary);
+  color: white;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.45);
+  margin-top: -20px; /* Pops above the bar like Jiji */
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.postItem:active .postBubble {
+  transform: scale(0.94);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+}
+
+.postItem span {
+  color: var(--primary);
 }
 
 @media (max-width: 768px) {
   .bottomNav {
     display: flex;
-    justify-content: space-around;
   }
 }
