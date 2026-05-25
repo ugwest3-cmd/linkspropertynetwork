@@ -64,6 +64,18 @@ export default function Footer() {
             </li>
           </ul>
         </div>
+        {/* Legal */}
+        <div>
+          <h4>Legal</h4>
+          <ul style={{ fontSize: "0.85rem", gap: "0.5rem", display: "flex", flexDirection: "column" }}>
+            <li><Link href="/terms">Terms & Conditions</Link></li>
+            <li><Link href="/privacy">Privacy Policy</Link></li>
+            <li><Link href="/billing">Billing Policy</Link></li>
+            <li><Link href="/candidate-privacy">Candidate Privacy</Link></li>
+            <li><Link href="/cookies">Cookie Policy</Link></li>
+            <li><Link href="/copyright">Copyright Infringement</Link></li>
+          </ul>
+        </div>
       </div>
 
       <div className={styles.bottom}>
