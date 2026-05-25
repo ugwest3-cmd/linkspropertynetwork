@@ -36,15 +36,48 @@ export default function AgentDashboardLayout({ children }: { children: React.Rea
 
         if (!isMounted) return;
 
-        if (error || !data) {
+        if (error && error.code === 'PGRST116') {
+          // Agent record doesn't exist yet (e.g. fresh Google Login)
+          // Auto-approve and create it here
+          const fullName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || "Agent";
+          const slug = fullName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") + "-" + Date.now().toString().slice(-4);
+          
+          const { error: insertError } = await supabase.from("agents").insert({
+            uid: session.user.id,
+            email: session.user.email,
+            name: fullName,
+            slug,
+            status: "approved",
+            plan: "free"
+          });
+
+          if (insertError) {
+            console.error("Failed to auto-create agent:", insertError);
+            if (isMounted) {
+              setStatus("error");
+              setLoading(false);
+            }
+            return;
+          }
+
+          if (isMounted) {
+            setStatus("approved");
+            setLoading(false);
+          }
+          return;
+        } else if (error || !data) {
           await supabase.auth.signOut();
-          setLoading(false);
-          router.replace("/agent/login");
+          if (isMounted) {
+            setLoading(false);
+            router.replace("/agent/login");
+          }
           return;
         }
 
-        setStatus(data.status || "pending");
-        setLoading(false);
+        if (isMounted) {
+          setStatus(data.status || "pending");
+          setLoading(false);
+        }
       } catch (err: any) {
         console.error("Setup error:", err);
         if (isMounted) {
