@@ -1,14 +1,82 @@
 .formContainer {
   display: flex;
   flex-direction: column;
+  gap: 1.5rem;
 }
 
-.card {
+.typeSelector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.typeCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   background: white;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 2rem;
-  box-shadow: var(--shadow-sm);
+  padding: 1.5rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-muted);
+}
+
+.typeCard:hover {
+  border-color: var(--primary);
+  background: rgba(249, 115, 22, 0.02);
+}
+
+.typeCard.active {
+  border-color: var(--primary);
+  background: rgba(249, 115, 22, 0.05);
+  color: var(--primary);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.15);
+}
+
+.typeCard span {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.minimalInput {
+  width: 100%;
+  border: none !important;
+  border-bottom: 2px solid var(--border) !important;
+  border-radius: 0 !important;
+  padding: 0.75rem 0 !important;
+  font-size: 1.1rem !important;
+  background: transparent !important;
+  transition: border-color 0.2s;
+}
+
+.minimalInput:focus {
+  outline: none !important;
+  border-bottom-color: var(--primary) !important;
+  box-shadow: none !important;
+}
+
+.inputGroup {
+  margin-bottom: 1.5rem;
+  background: white;
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.inputLabel {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
 }
 
 .uploadArea {
@@ -18,14 +86,35 @@
   justify-content: center;
   border: 2px dashed var(--border);
   border-radius: var(--radius);
-  padding: 3rem 2rem;
-  background-color: var(--background);
+  padding: 2.5rem 1rem;
+  background-color: #f8fafc;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-height: 150px;
+  text-align: center;
 }
 
 .uploadArea:hover {
   border-color: var(--primary);
-  background-color: rgba(253, 108, 0, 0.05); /* very light primary */
+  background-color: rgba(249, 115, 22, 0.05);
+}
+
+.photoPreviewContainer {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.photoPreview {
+  width: 80px;
+  height: 80px;
+  border-radius: 0.5rem;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+@media (max-width: 768px) {
+  .inputGroup {
+    padding: 1.25rem;
+  }
 }

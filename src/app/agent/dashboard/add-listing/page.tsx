@@ -6,7 +6,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { Upload, ChevronLeft, Save } from "lucide-react";
+import { Upload, ChevronLeft, Save, Home, Layers, Building2 } from "lucide-react";
 import Link from "next/link";
 import styles from "./add.module.css";
 
@@ -15,58 +15,53 @@ const schema = z.object({
   type: z.enum(["land", "house", "commercial"]),
   price: z.string().min(3, "Price is required"),
   location: z.string().min(3, "Location is required"),
-  description: z.string().min(20, "Provide a descriptive breakdown (min 20 chars)"),
+  description: z.string().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
 
 export default function AddListingPage() {
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [agentId, setAgentId] = useState<string | null>(null);
   const router = useRouter();
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
+    defaultValues: {
+      type: "house" // Default selection
+    }
   });
+
+  const selectedType = watch("type");
 
   useEffect(() => {
     const supabase = createClient();
     const fetchAgentId = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-      
-      const { data: agentData } = await supabase
-        .from("agents")
-        .select("uid")
-        .eq("uid", session.user.id)
-        .single();
-        
-      if (agentData) {
-        setAgentId(agentData.uid);
-      }
+      const { data: agentData } = await supabase.from("agents").select("uid").eq("uid", session.user.id).single();
+      if (agentData) setAgentId(agentData.uid);
     };
-    
     fetchAgentId();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        setAgentId(null);
-      } else {
-        fetchAgentId();
-      }
-    });
-    
-    return () => subscription.unsubscribe();
   }, []);
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 5) {
+      toast.error("You can upload a maximum of 5 photos.");
+      return;
+    }
+    setPhotoFiles(files);
+    // Create preview URLs
+    const previews = files.map(file => URL.createObjectURL(file));
+    setPhotoPreviews(previews);
+  };
 
   const onSubmit = async (data: FormData) => {
     if (photoFiles.length === 0) {
-      toast.error("Please upload at least one feature photo.");
-      return;
-    }
-    if (photoFiles.length > 3) {
-      toast.error("You can upload a maximum of 3 photos.");
+      toast.error("Please upload at least one photo.");
       return;
     }
     if (!agentId) {
@@ -75,24 +70,20 @@ export default function AddListingPage() {
     }
 
     setLoading(true);
-
     try {
-      // 1. Upload photos to Cloudinary API Route
+      // 1. Upload photos (Mocked or real API depending on backend)
       const photoUrls = await Promise.all(
         photoFiles.map(async (file) => {
           const formData = new FormData();
           formData.append("file", file);
-          const uploadRes = await fetch("/api/upload", {
-            method: "POST",
-            body: formData,
-          });
+          const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
           if (!uploadRes.ok) throw new Error("Image upload failed");
           const uploadData = await uploadRes.json();
           return uploadData.url;
         })
       );
 
-      // 2. Save Listing to Supabase
+      // 2. Save Listing
       const supabase = createClient();
       const { error } = await supabase.from("listings").insert({
         ...data,
@@ -102,111 +93,126 @@ export default function AddListingPage() {
       });
       if (error) throw error;
 
-      toast.success("Listing created and published to the marketplace!");
-      router.push("/agent/dashboard");
+      toast.success("Property posted successfully!");
+      router.push("/"); // Redirect back to home to see the listing
     } catch (err: any) {
       console.error(err);
-      toast.error(err.message || "Failed to create listing");
+      toast.error(err.message || "Failed to post property");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container" style={{ padding: "3rem 1rem", maxWidth: "800px" }}>
-      <div style={{ marginBottom: "2rem" }}>
-        <Link href="/agent/dashboard" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", color: "var(--text-muted)", marginBottom: "1rem" }}>
-          <ChevronLeft size={16} /> Back to Dashboard
+    <div className="container" style={{ padding: "2rem 1rem", maxWidth: "600px", margin: "0 auto" }}>
+      <div style={{ marginBottom: "1.5rem" }}>
+        <Link href="/agent/dashboard" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", color: "var(--text-muted)", marginBottom: "0.5rem", fontSize: "0.9rem" }}>
+          <ChevronLeft size={16} /> Back
         </Link>
-        <h1 style={{ fontSize: "2rem" }}>Add New Listing</h1>
-        <p style={{ color: "var(--text-muted)" }}>Your listing will go live immediately after submission.</p>
+        <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Post your property</h1>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className={styles.formContainer}>
-        <div className={styles.card}>
-          <h2 style={{ fontSize: "1.25rem", marginBottom: "1.5rem" }}>Property Details</h2>
+        
+        {/* Step 1: Category */}
+        <div>
+          <span className={styles.inputLabel}>Property Type</span>
+          <div className={styles.typeSelector}>
+            <div 
+              className={`${styles.typeCard} ${selectedType === "house" ? styles.active : ""}`}
+              onClick={() => setValue("type", "house")}
+            >
+              <Home size={28} />
+              <span>House / Apt</span>
+            </div>
+            <div 
+              className={`${styles.typeCard} ${selectedType === "land" ? styles.active : ""}`}
+              onClick={() => setValue("type", "land")}
+            >
+              <Layers size={28} />
+              <span>Land / Plot</span>
+            </div>
+            <div 
+              className={`${styles.typeCard} ${selectedType === "commercial" ? styles.active : ""}`}
+              onClick={() => setValue("type", "commercial")}
+            >
+              <Building2 size={28} />
+              <span>Commercial</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Step 2: Photos */}
+        <div className={styles.inputGroup} style={{ padding: "1rem" }}>
+          <span className={styles.inputLabel}>Add Photos</span>
+          <label className={styles.uploadArea}>
+            <Upload size={32} color="var(--primary)" style={{ marginBottom: "0.5rem" }}/>
+            <span style={{ fontWeight: 600 }}>Tap to add photos</span>
+            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>First photo will be the cover</span>
+            <input 
+              type="file" 
+              accept="image/*" 
+              multiple
+              onChange={handlePhotoChange} 
+              style={{ display: "none" }}
+            />
+          </label>
           
-          <div className="form-group">
-            <label className="label">Listing Title *</label>
-            <input {...register("title")} placeholder="e.g. 50x100 Plot in Kira" />
+          {photoPreviews.length > 0 && (
+            <div className={styles.photoPreviewContainer}>
+              {photoPreviews.map((src, i) => (
+                <img key={i} src={src} alt="preview" className={styles.photoPreview} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Step 3: Details */}
+        <div className={styles.inputGroup}>
+          <div style={{ marginBottom: "1.5rem" }}>
+            <span className={styles.inputLabel}>Title</span>
+            <input 
+              {...register("title")} 
+              placeholder="e.g. 3 Bedroom House in Kira" 
+              className={styles.minimalInput}
+            />
             {errors.title && <p className="error-text">{errors.title.message}</p>}
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
-            <div className="form-group">
-              <label className="label">Property Type *</label>
-              <select {...register("type")}>
-                <option value="land">Land / Plot</option>
-                <option value="house">House / Apartment</option>
-                <option value="commercial">Commercial</option>
-              </select>
-              {errors.type && <p className="error-text">{errors.type.message}</p>}
-            </div>
-            
-            <div className="form-group">
-              <label className="label">Price (UGX) *</label>
-              <input {...register("price")} placeholder="e.g. 65,000,000" />
-              {errors.price && <p className="error-text">{errors.price.message}</p>}
-            </div>
+          <div style={{ marginBottom: "1.5rem" }}>
+            <span className={styles.inputLabel}>Price (UGX)</span>
+            <input 
+              {...register("price")} 
+              type="number"
+              placeholder="e.g. 50000000" 
+              className={styles.minimalInput}
+            />
+            {errors.price && <p className="error-text">{errors.price.message}</p>}
           </div>
 
-          <div className="form-group">
-            <label className="label">Location *</label>
-            <input {...register("location")} placeholder="e.g. Kira, Wakiso" />
+          <div style={{ marginBottom: "1.5rem" }}>
+            <span className={styles.inputLabel}>Location</span>
+            <input 
+              {...register("location")} 
+              placeholder="e.g. Kira, Wakiso" 
+              className={styles.minimalInput}
+            />
             {errors.location && <p className="error-text">{errors.location.message}</p>}
           </div>
 
-          <div className="form-group">
-            <label className="label">Description & Features *</label>
-            <textarea {...register("description")} rows={5} placeholder="Describe the property, nearby amenities, private mailo vs leasehold, etc." />
-            {errors.description && <p className="error-text">{errors.description.message}</p>}
+          <div>
+            <span className={styles.inputLabel}>Description (Optional)</span>
+            <input 
+              {...register("description")} 
+              placeholder="Any extra details?" 
+              className={styles.minimalInput}
+            />
           </div>
         </div>
 
-        <div className={styles.card} style={{ marginTop: "1.5rem" }}>
-          <h2 style={{ fontSize: "1.25rem", marginBottom: "1.5rem" }}>Property Media</h2>
-          
-          <div className="form-group">
-            <label className="label">Photos (Up to 3) *</label>
-            <label className={styles.uploadArea}>
-              <Upload size={24} color="var(--primary)" style={{ marginBottom: "0.5rem" }}/>
-              <span style={{ fontWeight: 500 }}>
-                {photoFiles.length > 0 ? `${photoFiles.length} photo(s) selected` : "Click to select property images"}
-              </span>
-              <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>JPG, PNG up to 5MB</span>
-              <input 
-                type="file" 
-                accept="image/*" 
-                multiple
-                onChange={(e) => {
-                  const files = Array.from(e.target.files || []);
-                  if (files.length > 3) {
-                    toast.error("You can upload a maximum of 3 photos.");
-                    setPhotoFiles(files.slice(0, 3));
-                  } else {
-                    setPhotoFiles(files);
-                  }
-                }} 
-                style={{ display: "none" }}
-              />
-            </label>
-            {photoFiles.length > 0 && (
-              <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                {photoFiles.map((file, i) => (
-                  <div key={i} style={{ fontSize: "0.8rem", background: "#f1f5f9", padding: "0.25rem 0.5rem", borderRadius: "4px" }}>
-                    {file.name}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div style={{ marginTop: "2rem", display: "flex", justifyContent: "flex-end" }}>
-          <button type="submit" className="btn btn-primary" disabled={loading} style={{ padding: "0.8rem 2rem", fontSize: "1rem" }}>
-            {loading ? "Publishing..." : <><Save size={18}/> Publish Listing</>}
-          </button>
-        </div>
+        <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: "100%", padding: "1rem", fontSize: "1.1rem", borderRadius: "var(--radius)" }}>
+          {loading ? "Posting..." : "Post Property"}
+        </button>
       </form>
     </div>
   );
