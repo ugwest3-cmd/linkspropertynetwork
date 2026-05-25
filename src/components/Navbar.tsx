@@ -14,9 +14,17 @@ export default function Navbar() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess) => setSession(sess));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, sess) => {
+      setSession(sess);
+      if (event === "SIGNED_IN") {
+        const path = window.location.pathname;
+        if (path === "/" || path === "/agent/login" || path === "/agent/register") {
+          router.push("/agent/dashboard");
+        }
+      }
+    });
     return () => subscription.unsubscribe();
-  }, []);
+  }, [router, supabase]);
 
   return (
     <nav className={styles.nav}>

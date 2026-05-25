@@ -40,7 +40,11 @@ export default function AgentRegisterPage() {
       if (authError) throw authError;
 
       const user = authData.user;
-      if (!user) throw new Error("User creation failed");
+      if (!user) {
+        toast.success("Please check your email to confirm, or login if you already have an account.");
+        router.push("/agent/login");
+        return;
+      }
 
       const slug = data.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") + "-" + Date.now().toString().slice(-4);
 
@@ -75,7 +79,7 @@ export default function AgentRegisterPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/agent/dashboard`,
+          redirectTo: window.location.origin,
         },
       });
       if (error) throw error;
