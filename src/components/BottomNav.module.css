@@ -1,4 +1,21 @@
 /* BottomNav — Mobile Only */
+
+/* ── Backdrop ─────────────────────────────────── */
+.backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 190;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Slide-up Drawer ──────────────────────────── */
 .bottomNav {
   display: none;
   position: fixed;
@@ -6,12 +23,32 @@
   left: 0;
   right: 0;
   background: #fff;
-  border-top: 1px solid var(--border);
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  border-radius: 18px 18px 0 0;
+  box-shadow: 0 -6px 32px rgba(0, 0, 0, 0.14);
   z-index: 200;
-  padding-bottom: env(safe-area-inset-bottom);
-  height: 64px;
+  padding-bottom: env(safe-area-inset-bottom, 12px);
+  transform: translateY(100%);
+  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bottomNav.open {
+  transform: translateY(0);
+}
+
+/* ── Drag handle pill ─────────────────────────── */
+.handle {
+  width: 40px;
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 99px;
+  margin: 10px auto 4px;
+}
+
+/* ── Nav items row ────────────────────────────── */
+.navItems {
+  display: flex;
   align-items: stretch;
+  padding: 0.25rem 0 0.5rem;
 }
 
 .navItem {
@@ -19,14 +56,15 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 4px;
   color: #94a3b8;
   font-size: 0.68rem;
   font-weight: 500;
   flex: 1;
-  padding: 0.4rem 0;
+  padding: 0.6rem 0;
   transition: color 0.15s;
   -webkit-tap-highlight-color: transparent;
+  text-decoration: none;
 }
 
 .navItem.active {
@@ -34,51 +72,65 @@
 }
 
 .navItem.active svg {
-  filter: drop-shadow(0 0 4px rgba(249, 115, 22, 0.3));
+  filter: drop-shadow(0 0 4px rgba(249, 115, 22, 0.35));
 }
 
-/* Elevated center post button */
+/* Post item — same shape as others, orange accent */
 .postItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 3px;
-  flex: 1;
-  padding-top: 0;
   color: var(--primary);
-  font-size: 0.68rem;
-  font-weight: 600;
-  -webkit-tap-highlight-color: transparent;
-  padding-bottom: 0.4rem;
+  font-weight: 700;
 }
 
-.postBubble {
-  display: flex;
+.postItem svg {
+  filter: drop-shadow(0 0 5px rgba(249, 115, 22, 0.28));
+}
+
+/* ── Floating chevron toggle button ───────────── */
+.toggleBtn {
+  display: none;
+  position: fixed;
+  bottom: 18px;
+  right: 20px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #22c55e;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  z-index: 201;
+  box-shadow: 0 4px 18px rgba(34, 197, 94, 0.45);
   align-items: center;
   justify-content: center;
-  background: var(--primary);
-  color: white;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  border: 3px solid white;
-  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.45);
-  margin-top: -20px; /* Pops above the bar like Jiji */
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: background 0.2s, transform 0.3s, box-shadow 0.2s;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.postItem:active .postBubble {
-  transform: scale(0.94);
-  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+.toggleBtn:hover {
+  background: #16a34a;
+  box-shadow: 0 6px 24px rgba(34, 197, 94, 0.55);
 }
 
-.postItem span {
-  color: var(--primary);
+/* Flip chevron when open */
+.toggleBtn svg {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.toggleOpen svg {
+  transform: rotate(180deg);
+}
+
+/* ── Show on mobile ───────────────────────────── */
 @media (max-width: 768px) {
+  .backdrop {
+    display: block;
+  }
+
   .bottomNav {
+    display: block;
+  }
+
+  .toggleBtn {
     display: flex;
   }
 }

@@ -83,7 +83,7 @@ export default function AgentDashboardPage() {
   };
 
   const copyLink = () => {
-    navigator.clipboard.writeText(`https://linkspropertynetwork.vercel.app/agents/${agentSlug}`);
+    navigator.clipboard.writeText(`https://www.linkspropertynetwork.com/agents/${agentSlug}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

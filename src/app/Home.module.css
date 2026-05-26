@@ -75,7 +75,7 @@
 /* Main Content */
 .mainContent {
   flex-grow: 1;
-  min-width: 0; /* Prevents overflow */
+  min-width: 0;
 }
 
 /* Search Box */
@@ -139,8 +139,8 @@
 .categoriesWrapper {
   margin-bottom: 1.5rem;
   overflow-x: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none;  /* IE 10+ */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .categoriesWrapper::-webkit-scrollbar {
@@ -200,42 +200,53 @@
   font-weight: 600;
 }
 
-/* Cards Grid */
+/* ─── Cards Grid ─────────────────────────────── */
 .cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
 }
 
+/* ─── Jiji-style Card ─────────────────────────── */
 .card {
   background: white;
-  border-radius: var(--radius);
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  transition: transform 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  transition: transform 0.18s, box-shadow 0.18s;
+  display: flex;
+  flex-direction: column;
 }
 
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.11);
 }
 
-.cardLink {
+/* Photo wrapper is also a Link */
+.cardPhotoWrap {
   display: block;
   text-decoration: none;
   color: inherit;
+  position: relative;
+  flex-shrink: 0;
 }
 
 .cardPhoto {
-  position: relative;
   aspect-ratio: 4/3;
   background: #f1f5f9;
+  overflow: hidden;
 }
 
 .cardPhoto img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.card:hover .cardPhoto img {
+  transform: scale(1.04);
 }
 
 .noPhoto {
@@ -247,69 +258,148 @@
   color: #cbd5e1;
 }
 
+/* Pill badge — top-left on image */
 .typeBadge {
   position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
-  background: rgba(0,0,0,0.6);
-  color: white;
-  padding: 0.2rem 0.5rem;
-  border-radius: 0.25rem;
-  font-size: 0.7rem;
-  font-weight: 600;
-  backdrop-filter: blur(4px);
+  top: 0.6rem;
+  left: 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0.28rem 0.65rem;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
 }
 
+/* Badge colours per type */
+.type_house {
+  background: rgba(22, 163, 74, 0.88);
+  color: #fff;
+}
+.type_land {
+  background: rgba(37, 99, 235, 0.88);
+  color: #fff;
+}
+.type_commercial {
+  background: rgba(124, 58, 237, 0.88);
+  color: #fff;
+}
+
+/* Card body */
 .cardBody {
-  padding: 0.75rem;
+  padding: 0.85rem 0.9rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.cardLink {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  flex: 1;
 }
 
 .cardTitle {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--secondary);
-  margin-bottom: 0.25rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.price {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  color: var(--primary);
-  margin-bottom: 0.25rem;
+  color: var(--secondary);
+  margin-bottom: 0.3rem;
+  line-height: 1.3;
+  /* 2-line clamp */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.location {
+.cardLocation {
   display: flex;
   align-items: center;
   gap: 0.25rem;
   font-size: 0.75rem;
   color: var(--text-muted);
-  white-space: nowrap;
+  margin-bottom: 0.4rem;
+}
+
+.cardDesc {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.45;
+  /* 2-line clamp */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+  margin-bottom: 0.1rem;
+}
+
+/* Divider */
+.cardDivider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0.65rem 0 0.6rem;
+}
+
+/* Footer row: price left, enquire button right */
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.cardPrice {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--primary);
+  white-space: nowrap;
+}
+
+/* Green Enquire button — matches Jiji style */
+.enquireBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #22c55e;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.45rem 0.85rem;
+  border-radius: 99px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s, transform 0.15s;
+  flex-shrink: 0;
+}
+
+.enquireBtn:hover {
+  background: #16a34a;
+  transform: translateY(-1px);
 }
 
 /* States */
 .loadingGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
 }
 
 .skeleton {
-  height: 250px;
-  background: #e2e8f0;
-  border-radius: var(--radius);
-  animation: pulse 1.5s infinite;
+  height: 280px;
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  border-radius: 12px;
+  animation: shimmer 1.5s infinite;
 }
 
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .empty {
@@ -325,10 +415,14 @@
   color: var(--secondary);
 }
 
-/* Responsive */
+.feed {
+  /* no special styles needed */
+}
+
+/* ─── Responsive ─────────────────────────────── */
 @media (max-width: 1024px) {
   .cards, .loadingGrid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -336,25 +430,40 @@
   .desktopSidebar {
     display: none;
   }
-  
+
   .mobileFilterToggle {
     display: flex;
   }
 
   .cards, .loadingGrid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem; /* Smaller gap on mobile like Jiji */
+    gap: 0.6rem;
   }
 
   .cardBody {
-    padding: 0.5rem;
+    padding: 0.65rem 0.7rem 0.6rem;
   }
 
   .cardTitle {
     font-size: 0.85rem;
   }
-  
-  .price {
-    font-size: 0.95rem;
+
+  .cardDesc {
+    font-size: 0.73rem;
+    -webkit-line-clamp: 2;
+  }
+
+  .cardPrice {
+    font-size: 0.82rem;
+  }
+
+  .enquireBtn {
+    font-size: 0.73rem;
+    padding: 0.38rem 0.65rem;
+  }
+
+  .typeBadge {
+    font-size: 0.65rem;
+    padding: 0.22rem 0.5rem;
   }
 }

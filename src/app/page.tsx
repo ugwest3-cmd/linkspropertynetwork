@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Search, MapPin, Tag, Home, Layers, Building2, MessageCircle, X, Share2, Filter } from "lucide-react";
+import { Search, MapPin, Home, Layers, Building2, X, Filter, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import styles from "./Home.module.css";
 
@@ -23,9 +23,9 @@ type Listing = {
 };
 
 const TYPE_ICONS = {
-  land: <Layers size={20} />,
-  house: <Home size={20} />,
-  commercial: <Building2 size={20} />,
+  land: <Layers size={14} />,
+  house: <Home size={14} />,
+  commercial: <Building2 size={14} />,
 };
 
 const TYPE_LABELS = {
@@ -53,7 +53,6 @@ export default function MarketplacePage() {
         const supabase = createClient();
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (!error) {
-          // Clear the code from the URL so it doesn't try to exchange it again
           window.history.replaceState({}, document.title, window.location.pathname);
         } else {
           console.error("Auth code exchange error:", error);
@@ -131,7 +130,7 @@ export default function MarketplacePage() {
   const FilterPanel = () => (
     <div className={styles.filterPanel}>
       <h3 className={styles.filterTitle}>Filters</h3>
-      
+
       <div className={styles.filterGroup}>
         <label>Location</label>
         <div className={styles.inputWrapper}>
@@ -148,7 +147,7 @@ export default function MarketplacePage() {
       <div className={styles.filterGroup}>
         <label>Min Price (UGX)</label>
         <div className={styles.inputWrapper}>
-          <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>UGX</span>
+          <span style={{ fontSize: "0.8rem", fontWeight: "bold" }}>UGX</span>
           <input
             type="number"
             placeholder="e.g. 50000000"
@@ -161,7 +160,7 @@ export default function MarketplacePage() {
       <div className={styles.filterGroup}>
         <label>Max Price (UGX)</label>
         <div className={styles.inputWrapper}>
-          <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>UGX</span>
+          <span style={{ fontSize: "0.8rem", fontWeight: "bold" }}>UGX</span>
           <input
             type="number"
             placeholder="e.g. 200000000"
@@ -182,7 +181,7 @@ export default function MarketplacePage() {
       <Navbar />
       <main className={styles.mainLayout}>
         <div className={`container ${styles.layoutContainer}`}>
-          
+
           {/* Desktop Sidebar */}
           <aside className={styles.desktopSidebar}>
             <FilterPanel />
@@ -190,7 +189,7 @@ export default function MarketplacePage() {
 
           {/* Main Content Area */}
           <div className={styles.mainContent}>
-            
+
             {/* Search Bar */}
             <div className={styles.searchContainer}>
               <div className={styles.searchBox}>
@@ -206,8 +205,8 @@ export default function MarketplacePage() {
                   <button onClick={() => setSearch("")} className={styles.clearBtn}><X size={16} /></button>
                 )}
               </div>
-              <button 
-                className={styles.mobileFilterToggle} 
+              <button
+                className={styles.mobileFilterToggle}
                 onClick={() => setShowMobileFilters(!showMobileFilters)}
               >
                 <Filter size={18} />
@@ -224,7 +223,7 @@ export default function MarketplacePage() {
             {/* Categories */}
             <div className={styles.categoriesWrapper}>
               <div className={styles.categoriesList}>
-                <button 
+                <button
                   className={`${styles.categoryBtn} ${typeFilter === "all" ? styles.active : ""}`}
                   onClick={() => setTypeFilter("all")}
                 >
@@ -260,27 +259,56 @@ export default function MarketplacePage() {
                 <div className={styles.cards}>
                   {filtered.map((listing) => (
                     <article key={listing.id} className={styles.card}>
-                      <Link href={`/listings/${listing.id}`} className={styles.cardLink}>
+
+                      {/* Photo + Badge */}
+                      <Link href={`/listings/${listing.id}`} className={styles.cardPhotoWrap}>
                         <div className={styles.cardPhoto}>
                           {listing.photos?.[0] ? (
                             <img src={listing.photos[0]} alt={listing.title} loading="lazy" />
                           ) : (
                             <div className={styles.noPhoto}><Home size={40} strokeWidth={1} /></div>
                           )}
-                          <span className={`${styles.typeBadge} ${styles[`type_${listing.type}`]}`}>
-                            {TYPE_LABELS[listing.type]}
-                          </span>
                         </div>
-                        <div className={styles.cardBody}>
+                        <span className={`${styles.typeBadge} ${styles[`type_${listing.type}`]}`}>
+                          {TYPE_ICONS[listing.type]}&nbsp;{TYPE_LABELS[listing.type]}
+                        </span>
+                      </Link>
+
+                      {/* Card Body */}
+                      <div className={styles.cardBody}>
+                        <Link href={`/listings/${listing.id}`} className={styles.cardLink}>
                           <h2 className={styles.cardTitle}>{listing.title}</h2>
-                          <div className={styles.price}>
-                            UGX {listing.price}
-                          </div>
-                          <div className={styles.location}>
+                          <div className={styles.cardLocation}>
                             <MapPin size={12} /> {listing.location}
                           </div>
+                          {listing.description && (
+                            <p className={styles.cardDesc}>{listing.description}</p>
+                          )}
+                        </Link>
+
+                        <hr className={styles.cardDivider} />
+
+                        {/* Footer: price + enquire */}
+                        <div className={styles.cardFooter}>
+                          <span className={styles.cardPrice}>UGX {listing.price}</span>
+                          {listing.agentPhone ? (
+                            <a
+                              href={waLink(listing.agentPhone, listing.title)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={styles.enquireBtn}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MessageCircle size={15} /> Enquire
+                            </a>
+                          ) : (
+                            <Link href={`/listings/${listing.id}`} className={styles.enquireBtn}>
+                              <MessageCircle size={15} /> Enquire
+                            </Link>
+                          )}
                         </div>
-                      </Link>
+                      </div>
+
                     </article>
                   ))}
                 </div>
