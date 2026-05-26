@@ -1,12 +1,47 @@
 .footer {
   background: var(--secondary);
   color: #94a3b8;
-  padding: 4rem 0 0;
+}
+
+/* ── Mobile collapsible bar ─────────────────────── */
+.mobileBar {
+  display: none; /* hidden on desktop */
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.25rem;
+  background: #22c55e;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobileBarLogo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #fff;
+}
+
+.chevron {
+  color: #fff;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* ── Full footer content ─────────────────────────── */
+.footerContent {
+  padding-top: 4rem;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
   gap: 2.5rem;
   padding-bottom: 3rem;
 }
@@ -76,7 +111,29 @@
   color: var(--primary) !important;
 }
 
+/* ── Responsive ────────────────────────────────── */
+@media (max-width: 1024px) {
+  .grid { grid-template-columns: 2fr 1fr 1fr 1fr; }
+}
+
 @media (max-width: 768px) {
+  /* Show the green toggle bar on mobile */
+  .mobileBar { display: flex; }
+
+  /* Hide full content by default on mobile */
+  .footerContent {
+    padding-top: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* When open, allow content to expand */
+  .footerContent.expanded {
+    max-height: 1200px;
+    padding-top: 2rem;
+  }
+
   .grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
   .bottom { flex-direction: column; gap: 0.25rem; margin: 0; text-align: center; }
 }
