@@ -120,6 +120,9 @@
   /* Show the green toggle bar on mobile */
   .mobileBar { display: flex; }
 
+  /* Hide the brand block on mobile — logo already shown in green bar */
+  .brand { display: none; }
+
   /* Hide full content by default on mobile */
   .footerContent {
     padding-top: 0;

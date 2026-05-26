@@ -1,4 +1,4 @@
-/* Register page — clean mobile-first layout */
+/* Login page — clean mobile-first layout */
 
 .page {
   min-height: calc(100vh - 60px);
@@ -114,12 +114,6 @@
   box-shadow: 0 0 0 3px rgba(249,115,22,0.1);
 }
 
-.errorText {
-  font-size: 0.78rem;
-  color: var(--error);
-  margin-top: 0.15rem;
-}
-
 .submitBtn {
   width: 100%;
   padding: 0.8rem;
@@ -142,25 +136,11 @@
 
 .submitBtn:disabled { opacity: 0.65; cursor: not-allowed; }
 
-.submitInner {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.terms {
-  text-align: center;
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  margin-top: 1.1rem;
-  line-height: 1.5;
-}
-
 .footer {
   text-align: center;
   font-size: 0.85rem;
   color: var(--text-muted);
-  margin-top: 0.6rem;
+  margin-top: 1.25rem;
 }
 
 .link {

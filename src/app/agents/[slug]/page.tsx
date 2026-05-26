@@ -1,15 +1,25 @@
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { MapPin, Phone, CheckCircle, Home, Image as ImageIcon, Share2 } from "lucide-react";
+import { MapPin, Phone, CheckCircle, Home, Share2, Layers, Building2, Tag, MessageCircle } from "lucide-react";
 import styles from "./agentProfile.module.css";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
-// Optional: if using App Router with async components
-export default async function AgentProfilePage({ params }: { params: { slug: string } }) {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
+const TYPE_ICONS = {
+  land: <Layers size={15} />,
+  house: <Home size={15} />,
+  commercial: <Building2 size={15} />,
+};
+
+const TYPE_LABELS = {
+  land: "Land / Plot",
+  house: "House / Apartment",
+  commercial: "Commercial",
+};
+
+export default async function AgentProfilePage({ params }: { params: Promise<{ slug: string }> | { slug: string } }) {
+  // Support both Promise and plain params for different Next.js versions
   const resolvedParams = await params;
   const { slug } = resolvedParams;
   const supabase = await createClient();
@@ -30,7 +40,8 @@ export default async function AgentProfilePage({ params }: { params: { slug: str
   const { data: listingsData } = await supabase
     .from("listings")
     .select("*")
-    .eq("agentId", agent.uid);
+    .eq("agentId", agent.uid)
+    .eq("verified", true); // only show verified on public profiles
   
   const listings = listingsData || [];
 
@@ -41,9 +52,13 @@ export default async function AgentProfilePage({ params }: { params: { slug: str
         <div className="container">
           {/* Agent Header */}
           <div className={styles.profileHeader}>
-             <div className={styles.avatarPlaceholder}>
-                <span className={styles.avatarInitials}>{agent.name.substring(0, 2).toUpperCase()}</span>
-             </div>
+             {agent.photo ? (
+               <img src={agent.photo} alt={agent.name} className={styles.profileAvatar} />
+             ) : (
+               <div className={styles.avatarPlaceholder}>
+                  <span className={styles.avatarInitials}>{agent.name.substring(0, 2).toUpperCase()}</span>
+               </div>
+             )}
              <div className={styles.info}>
                 <div className={styles.titleRow}>
                   <h1>{agent.name}</h1>
@@ -77,41 +92,52 @@ export default async function AgentProfilePage({ params }: { params: { slug: str
             ) : (
                <div className={styles.grid}>
                  {listings.map(listing => (
-                   <div key={listing.id} className={styles.listingCard}>
-                     <div className={styles.imagePlaceholder}>
-                       {listing.photos && listing.photos.length > 0 ? (
-                         <img src={listing.photos[0]} alt={listing.title} className={styles.image} />
-                       ) : (
-                         <ImageIcon size={32} color="#cbd5e1" />
-                       )}
-                       {listing.verified && <span className={styles.verifiedTag}><CheckCircle size={14}/> Verified</span>}
-                     </div>
-                     <div className={styles.listingBody}>
-                       <div className={styles.listingType}>{listing.type}</div>
-                       <h3>{listing.title}</h3>
-                       <div className={styles.listingLoc}><MapPin size={14}/> {listing.location}</div>
-                       <div className={styles.listingPrice}>{listing.price}</div>
-                       <div style={{ display: "flex", gap: "0.5rem", width: "100%" }}>
-                         <Link
-                           href={`/listings/${listing.id}`}
-                           className={`btn btn-outline ${styles.listingBtn}`}
-                           style={{ padding: "0.5rem", flexShrink: 0 }}
-                           title="Share Property"
-                         >
-                           <Share2 size={16} />
-                         </Link>
+                   <article key={listing.id} className={styles.card}>
+                     {/* Image area with floating badge ABOVE it */}
+                     <Link href={`/listings/${listing.id}`} className={styles.cardImageWrap}>
+                       {/* Badge sits at the top-left, overlapping the image */}
+                       <span className={`${styles.typeBadge} ${styles[`type_${listing.type}`]}`}>
+                         {TYPE_ICONS[listing.type as keyof typeof TYPE_ICONS] || <Home size={15} />}&nbsp;
+                         {TYPE_LABELS[listing.type as keyof typeof TYPE_LABELS] || listing.type}
+                       </span>
+                       <div className={styles.cardPhoto}>
+                         {listing.photos?.[0] ? (
+                           <img src={listing.photos[0]} alt={listing.title} loading="lazy" />
+                         ) : (
+                           <div className={styles.noPhoto}><Home size={40} strokeWidth={1} /></div>
+                         )}
+                       </div>
+                     </Link>
+
+                     {/* Card body */}
+                     <div className={styles.cardBody}>
+                       <Link href={`/listings/${listing.id}`} className={styles.cardLink}>
+                         <h2 className={styles.cardTitle}>{listing.title}</h2>
+                         <div className={styles.cardLocation}>
+                           <MapPin size={13} /> {listing.location}
+                         </div>
+                         {listing.description && (
+                           <p className={styles.cardDesc}>{listing.description}</p>
+                         )}
+                       </Link>
+
+                       <hr className={styles.cardDivider} />
+
+                       <div className={styles.cardFooter}>
+                         <span className={styles.cardPrice}>
+                           <Tag size={15} /> UGX {listing.price}
+                         </span>
                          <a
-                            href={`https://wa.me/256${agent.phone.replace(/^0/, "").replace(/\s/g, "")}?text=Hello%20${encodeURIComponent(agent.name)}%2C%20I%20am%20interested%20in%20your%20listing:%20${encodeURIComponent(listing.title)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`btn btn-outline ${styles.listingBtn}`}
-                            style={{ flex: 1, justifyContent: "center" }}
-                          >
-                            Inquire Details
-                          </a>
+                           href={`https://wa.me/256${agent.phone.replace(/^0/, "").replace(/\s/g, "")}?text=Hello%20${encodeURIComponent(agent.name)}%2C%20I%20am%20interested%20in%20your%20listing:%20${encodeURIComponent(listing.title)}`}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className={styles.enquireBtn}
+                         >
+                           <MessageCircle size={16} /> Enquire
+                         </a>
                        </div>
                      </div>
-                   </div>
+                   </article>
                  ))}
                </div>
             )}

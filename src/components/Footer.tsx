@@ -11,7 +11,8 @@ export default function Footer() {
 
   return (
     <footer className={styles.footer}>
-      {/* ── Mobile collapsible header bar ── */}
+
+      {/* ── Mobile collapsible header bar (hidden on desktop) ── */}
       <div className={styles.mobileBar} onClick={() => setIsOpen((v) => !v)}>
         <div className={styles.mobileBarLogo}>
           <Image src="/logo.png" alt="Links Property Network" width={24} height={24} style={{ objectFit: "contain" }} />
@@ -24,10 +25,11 @@ export default function Footer() {
         />
       </div>
 
-      {/* ── Full footer content (always visible on desktop, collapsible on mobile) ── */}
+      {/* ── Full footer content ── */}
       <div className={`${styles.footerContent} ${isOpen ? styles.expanded : ""}`}>
         <div className={`container ${styles.grid}`}>
-          {/* Brand */}
+
+          {/* Brand — only shown on desktop */}
           <div className={styles.brand}>
             <div className={styles.logo}>
               <Image src="/logo.png" alt="Links Property Network" width={28} height={28} style={{ objectFit: "contain" }} />
@@ -80,7 +82,7 @@ export default function Footer() {
           {/* Legal */}
           <div>
             <h4>Legal</h4>
-            <ul style={{ fontSize: "0.85rem", gap: "0.5rem", display: "flex", flexDirection: "column" }}>
+            <ul>
               <li><Link href="/terms">Terms &amp; Conditions</Link></li>
               <li><Link href="/privacy">Privacy Policy</Link></li>
               <li><Link href="/billing">Billing Policy</Link></li>
