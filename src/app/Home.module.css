@@ -62,9 +62,7 @@
   width: 100%;
 }
 
-.inputWrapper input:focus {
-  box-shadow: none;
-}
+.inputWrapper input:focus { box-shadow: none; }
 
 .applyBtn {
   width: 100%;
@@ -78,7 +76,7 @@
   min-width: 0;
 }
 
-/* Search Box */
+/* Search */
 .searchContainer {
   display: flex;
   gap: 0.5rem;
@@ -95,9 +93,7 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-.searchIcon {
-  color: var(--text-muted);
-}
+.searchIcon { color: var(--text-muted); }
 
 .searchInput {
   border: none;
@@ -106,9 +102,7 @@
   background: transparent;
 }
 
-.searchInput:focus {
-  box-shadow: none;
-}
+.searchInput:focus { box-shadow: none; }
 
 .clearBtn {
   background: none;
@@ -131,9 +125,7 @@
   cursor: pointer;
 }
 
-.mobileFilters {
-  margin-bottom: 1rem;
-}
+.mobileFilters { margin-bottom: 1rem; }
 
 /* Categories */
 .categoriesWrapper {
@@ -143,9 +135,7 @@
   -ms-overflow-style: none;
 }
 
-.categoriesWrapper::-webkit-scrollbar {
-  display: none;
-}
+.categoriesWrapper::-webkit-scrollbar { display: none; }
 
 .categoriesList {
   display: flex;
@@ -200,19 +190,19 @@
   font-weight: 600;
 }
 
-/* ─── Cards Grid ─────────────────────────────── */
+/* ─── Cards Grid ─────────────────────────── */
 .cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
 }
 
-/* ─── Jiji-style Card ─────────────────────────── */
+/* ─── Card — matches reference image exactly ─ */
 .card {
   background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  border-radius: 14px;
+  overflow: visible; /* allow badge to overflow above */
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
   transition: transform 0.18s, box-shadow 0.18s;
   display: flex;
   flex-direction: column;
@@ -220,33 +210,63 @@
 
 .card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.11);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.12);
 }
 
-/* Photo wrapper is also a Link */
-.cardPhotoWrap {
+/* Image area wraps both badge and photo */
+.cardImageWrap {
+  position: relative;
   display: block;
   text-decoration: none;
   color: inherit;
-  position: relative;
-  flex-shrink: 0;
+  /* clip the photo corners but let badge overflow at the top */
+  border-radius: 14px 14px 0 0;
+  overflow: visible;
 }
 
+/* Badge — floats at the top-left, overlapping the image */
+.typeBadge {
+  position: absolute;
+  top: -1px;        /* sits flush at the very top edge of the image */
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0.35rem 0.85rem;
+  border-radius: 99px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  white-space: nowrap;
+}
+
+/* Badge color — blue for all types (matching reference image exactly) */
+.type_house,
+.type_land,
+.type_commercial {
+  background: #3b82f6;
+  color: #fff;
+}
+
+/* Photo */
 .cardPhoto {
-  aspect-ratio: 4/3;
+  aspect-ratio: 4 / 3;
   background: #f1f5f9;
   overflow: hidden;
+  border-radius: 14px 14px 0 0;
 }
 
 .cardPhoto img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
   transition: transform 0.3s;
 }
 
 .card:hover .cardPhoto img {
-  transform: scale(1.04);
+  transform: scale(1.03);
 }
 
 .noPhoto {
@@ -258,40 +278,9 @@
   color: #cbd5e1;
 }
 
-/* Pill badge — top-left on image */
-.typeBadge {
-  position: absolute;
-  top: 0.6rem;
-  left: 0.6rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0.28rem 0.65rem;
-  border-radius: 99px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  backdrop-filter: blur(6px);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
-}
-
-/* Badge colours per type */
-.type_house {
-  background: rgba(22, 163, 74, 0.88);
-  color: #fff;
-}
-.type_land {
-  background: rgba(37, 99, 235, 0.88);
-  color: #fff;
-}
-.type_commercial {
-  background: rgba(124, 58, 237, 0.88);
-  color: #fff;
-}
-
-/* Card body */
+/* Card body — white section below image */
 .cardBody {
-  padding: 0.85rem 0.9rem 0.75rem;
+  padding: 1rem 1rem 0.85rem;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -301,51 +290,46 @@
   display: block;
   text-decoration: none;
   color: inherit;
-  flex: 1;
 }
 
+/* Bold title — dark, matches reference */
 .cardTitle {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--secondary);
-  margin-bottom: 0.3rem;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 0.35rem;
   line-height: 1.3;
-  /* 2-line clamp */
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
+/* Location row */
 .cardLocation {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-bottom: 0.4rem;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  color: #64748b;
+  margin-bottom: 0.5rem;
 }
 
+/* Description — gray, wraps naturally (no aggressive clamp) */
 .cardDesc {
-  font-size: 0.78rem;
+  font-size: 0.83rem;
   color: #64748b;
-  line-height: 1.45;
-  /* 2-line clamp */
+  line-height: 1.5;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  margin-bottom: 0.1rem;
 }
 
 /* Divider */
 .cardDivider {
   border: none;
-  border-top: 1px solid var(--border);
-  margin: 0.65rem 0 0.6rem;
+  border-top: 1px solid #e2e8f0;
+  margin: 0.8rem 0 0.7rem;
 }
 
-/* Footer row: price left, enquire button right */
+/* Footer: price left, enquire right */
 .cardFooter {
   display: flex;
   align-items: center;
@@ -353,24 +337,28 @@
   gap: 0.5rem;
 }
 
+/* Price — orange with tag icon */
 .cardPrice {
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: var(--primary);
-  white-space: nowrap;
-}
-
-/* Green Enquire button — matches Jiji style */
-.enquireBtn {
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #f97316;
+  white-space: nowrap;
+}
+
+/* Enquire button — green, rounded, prominent */
+.enquireBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: #22c55e;
   color: #fff;
-  font-size: 0.8rem;
+  font-size: 0.88rem;
   font-weight: 700;
-  padding: 0.45rem 0.85rem;
-  border-radius: 99px;
+  padding: 0.55rem 1.1rem;
+  border-radius: 12px;
   text-decoration: none;
   white-space: nowrap;
   transition: background 0.2s, transform 0.15s;
@@ -390,10 +378,10 @@
 }
 
 .skeleton {
-  height: 280px;
+  height: 320px;
   background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
   background-size: 200% 100%;
-  border-radius: 12px;
+  border-radius: 14px;
   animation: shimmer 1.5s infinite;
 }
 
@@ -415,11 +403,9 @@
   color: var(--secondary);
 }
 
-.feed {
-  /* no special styles needed */
-}
+.feed { /* no extra styles needed */ }
 
-/* ─── Responsive ─────────────────────────────── */
+/* ─── Responsive ─────────────────────────── */
 @media (max-width: 1024px) {
   .cards, .loadingGrid {
     grid-template-columns: repeat(2, 1fr);
@@ -427,43 +413,40 @@
 }
 
 @media (max-width: 768px) {
-  .desktopSidebar {
-    display: none;
-  }
-
-  .mobileFilterToggle {
-    display: flex;
-  }
+  .desktopSidebar { display: none; }
+  .mobileFilterToggle { display: flex; }
 
   .cards, .loadingGrid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.6rem;
+    gap: 0.65rem;
   }
 
   .cardBody {
-    padding: 0.65rem 0.7rem 0.6rem;
+    padding: 0.85rem 0.8rem 0.7rem;
   }
 
   .cardTitle {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
   }
 
   .cardDesc {
-    font-size: 0.73rem;
+    font-size: 0.78rem;
     -webkit-line-clamp: 2;
   }
 
   .cardPrice {
-    font-size: 0.82rem;
+    font-size: 0.85rem;
   }
 
   .enquireBtn {
-    font-size: 0.73rem;
-    padding: 0.38rem 0.65rem;
+    font-size: 0.78rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 10px;
+    gap: 4px;
   }
 
   .typeBadge {
-    font-size: 0.65rem;
-    padding: 0.22rem 0.5rem;
+    font-size: 0.7rem;
+    padding: 0.28rem 0.65rem;
   }
 }

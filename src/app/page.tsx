@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Search, MapPin, Home, Layers, Building2, X, Filter, MessageCircle } from "lucide-react";
+import { Search, MapPin, Home, Layers, Building2, X, Filter, MessageCircle, Tag } from "lucide-react";
 import Link from "next/link";
 import styles from "./Home.module.css";
 
@@ -23,14 +23,14 @@ type Listing = {
 };
 
 const TYPE_ICONS = {
-  land: <Layers size={14} />,
-  house: <Home size={14} />,
-  commercial: <Building2 size={14} />,
+  land: <Layers size={15} />,
+  house: <Home size={15} />,
+  commercial: <Building2 size={15} />,
 };
 
 const TYPE_LABELS = {
   land: "Land / Plot",
-  house: "House / Apt",
+  house: "House / Apartment",
   commercial: "Commercial",
 };
 
@@ -100,9 +100,7 @@ export default function MarketplacePage() {
 
   useEffect(() => {
     let results = listings;
-    if (typeFilter !== "all") {
-      results = results.filter((l) => l.type === typeFilter);
-    }
+    if (typeFilter !== "all") results = results.filter((l) => l.type === typeFilter);
     if (search.trim()) {
       const q = search.toLowerCase();
       results = results.filter(
@@ -130,49 +128,28 @@ export default function MarketplacePage() {
   const FilterPanel = () => (
     <div className={styles.filterPanel}>
       <h3 className={styles.filterTitle}>Filters</h3>
-
       <div className={styles.filterGroup}>
         <label>Location</label>
         <div className={styles.inputWrapper}>
           <MapPin size={16} />
-          <input
-            type="text"
-            placeholder="e.g. Kampala, Kira..."
-            value={locationFilter}
-            onChange={(e) => setLocationFilter(e.target.value)}
-          />
+          <input type="text" placeholder="e.g. Kampala, Kira..." value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} />
         </div>
       </div>
-
       <div className={styles.filterGroup}>
         <label>Min Price (UGX)</label>
         <div className={styles.inputWrapper}>
           <span style={{ fontSize: "0.8rem", fontWeight: "bold" }}>UGX</span>
-          <input
-            type="number"
-            placeholder="e.g. 50000000"
-            value={minPrice}
-            onChange={(e) => setMinPrice(e.target.value)}
-          />
+          <input type="number" placeholder="e.g. 50000000" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} />
         </div>
       </div>
-
       <div className={styles.filterGroup}>
         <label>Max Price (UGX)</label>
         <div className={styles.inputWrapper}>
           <span style={{ fontSize: "0.8rem", fontWeight: "bold" }}>UGX</span>
-          <input
-            type="number"
-            placeholder="e.g. 200000000"
-            value={maxPrice}
-            onChange={(e) => setMaxPrice(e.target.value)}
-          />
+          <input type="number" placeholder="e.g. 200000000" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} />
         </div>
       </div>
-
-      <button className={`btn btn-primary ${styles.applyBtn}`} onClick={() => setShowMobileFilters(false)}>
-        Apply Filters
-      </button>
+      <button className={`btn btn-primary ${styles.applyBtn}`} onClick={() => setShowMobileFilters(false)}>Apply Filters</button>
     </div>
   );
 
@@ -187,7 +164,7 @@ export default function MarketplacePage() {
             <FilterPanel />
           </aside>
 
-          {/* Main Content Area */}
+          {/* Main Content */}
           <div className={styles.mainContent}>
 
             {/* Search Bar */}
@@ -201,41 +178,24 @@ export default function MarketplacePage() {
                   onChange={(e) => setSearch(e.target.value)}
                   className={styles.searchInput}
                 />
-                {search && (
-                  <button onClick={() => setSearch("")} className={styles.clearBtn}><X size={16} /></button>
-                )}
+                {search && <button onClick={() => setSearch("")} className={styles.clearBtn}><X size={16} /></button>}
               </div>
-              <button
-                className={styles.mobileFilterToggle}
-                onClick={() => setShowMobileFilters(!showMobileFilters)}
-              >
+              <button className={styles.mobileFilterToggle} onClick={() => setShowMobileFilters(!showMobileFilters)}>
                 <Filter size={18} />
               </button>
             </div>
 
-            {/* Mobile Filters Dropdown */}
-            {showMobileFilters && (
-              <div className={styles.mobileFilters}>
-                <FilterPanel />
-              </div>
-            )}
+            {showMobileFilters && <div className={styles.mobileFilters}><FilterPanel /></div>}
 
             {/* Categories */}
             <div className={styles.categoriesWrapper}>
               <div className={styles.categoriesList}>
-                <button
-                  className={`${styles.categoryBtn} ${typeFilter === "all" ? styles.active : ""}`}
-                  onClick={() => setTypeFilter("all")}
-                >
+                <button className={`${styles.categoryBtn} ${typeFilter === "all" ? styles.active : ""}`} onClick={() => setTypeFilter("all")}>
                   <div className={styles.catIcon}><Search size={20} /></div>
                   <span>All</span>
                 </button>
                 {(["land", "house", "commercial"] as const).map((t) => (
-                  <button
-                    key={t}
-                    className={`${styles.categoryBtn} ${typeFilter === t ? styles.active : ""}`}
-                    onClick={() => setTypeFilter(t)}
-                  >
+                  <button key={t} className={`${styles.categoryBtn} ${typeFilter === t ? styles.active : ""}`} onClick={() => setTypeFilter(t)}>
                     <div className={styles.catIcon}>{TYPE_ICONS[t]}</div>
                     <span>{TYPE_LABELS[t]}</span>
                   </button>
@@ -243,7 +203,7 @@ export default function MarketplacePage() {
               </div>
             </div>
 
-            {/* Listings Grid */}
+            {/* Listings */}
             <div className={styles.feed}>
               {loading ? (
                 <div className={styles.loadingGrid}>
@@ -260,8 +220,12 @@ export default function MarketplacePage() {
                   {filtered.map((listing) => (
                     <article key={listing.id} className={styles.card}>
 
-                      {/* Photo + Badge */}
-                      <Link href={`/listings/${listing.id}`} className={styles.cardPhotoWrap}>
+                      {/* Image area with floating badge ABOVE it */}
+                      <Link href={`/listings/${listing.id}`} className={styles.cardImageWrap}>
+                        {/* Badge sits at the top-left, overlapping the image */}
+                        <span className={`${styles.typeBadge} ${styles[`type_${listing.type}`]}`}>
+                          {TYPE_ICONS[listing.type]}&nbsp;{TYPE_LABELS[listing.type]}
+                        </span>
                         <div className={styles.cardPhoto}>
                           {listing.photos?.[0] ? (
                             <img src={listing.photos[0]} alt={listing.title} loading="lazy" />
@@ -269,17 +233,14 @@ export default function MarketplacePage() {
                             <div className={styles.noPhoto}><Home size={40} strokeWidth={1} /></div>
                           )}
                         </div>
-                        <span className={`${styles.typeBadge} ${styles[`type_${listing.type}`]}`}>
-                          {TYPE_ICONS[listing.type]}&nbsp;{TYPE_LABELS[listing.type]}
-                        </span>
                       </Link>
 
-                      {/* Card Body */}
+                      {/* Card body */}
                       <div className={styles.cardBody}>
                         <Link href={`/listings/${listing.id}`} className={styles.cardLink}>
                           <h2 className={styles.cardTitle}>{listing.title}</h2>
                           <div className={styles.cardLocation}>
-                            <MapPin size={12} /> {listing.location}
+                            <MapPin size={13} /> {listing.location}
                           </div>
                           {listing.description && (
                             <p className={styles.cardDesc}>{listing.description}</p>
@@ -288,9 +249,10 @@ export default function MarketplacePage() {
 
                         <hr className={styles.cardDivider} />
 
-                        {/* Footer: price + enquire */}
                         <div className={styles.cardFooter}>
-                          <span className={styles.cardPrice}>UGX {listing.price}</span>
+                          <span className={styles.cardPrice}>
+                            <Tag size={15} /> UGX {listing.price}
+                          </span>
                           {listing.agentPhone ? (
                             <a
                               href={waLink(listing.agentPhone, listing.title)}
@@ -299,11 +261,11 @@ export default function MarketplacePage() {
                               className={styles.enquireBtn}
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <MessageCircle size={15} /> Enquire
+                              <MessageCircle size={16} /> Enquire
                             </a>
                           ) : (
                             <Link href={`/listings/${listing.id}`} className={styles.enquireBtn}>
-                              <MessageCircle size={15} /> Enquire
+                              <MessageCircle size={16} /> Enquire
                             </Link>
                           )}
                         </div>
