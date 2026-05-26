@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { Upload, ChevronLeft, Save, Home, Layers, Building2 } from "lucide-react";
 import Link from "next/link";
 import styles from "./add.module.css";
+import { UGANDA_LOCATIONS } from "@/lib/constants";
 
 const schema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters"),
@@ -192,11 +193,16 @@ export default function AddListingPage() {
 
           <div style={{ marginBottom: "1.5rem" }}>
             <span className={styles.inputLabel}>Location</span>
-            <input 
+            <select 
               {...register("location")} 
-              placeholder="e.g. Kira, Wakiso" 
               className={styles.minimalInput}
-            />
+              style={{ width: "100%", outline: "none", color: "var(--foreground)", background: "white", cursor: "pointer" }}
+            >
+              <option value="">Select Location...</option>
+              {UGANDA_LOCATIONS.map((loc) => (
+                <option key={loc} value={loc}>{loc}</option>
+              ))}
+            </select>
             {errors.location && <p className="error-text">{errors.location.message}</p>}
           </div>
 

@@ -9,6 +9,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Users, ChevronRight, CheckCircle } from "lucide-react";
 import styles from "./find.module.css";
+import { UGANDA_LOCATIONS } from "@/lib/constants";
 
 const schema = z.object({
   buyerName: z.string().min(2, "Full name is required"),
@@ -118,7 +119,15 @@ export default function FindPropertyPage() {
             <div className={styles.twoCol}>
               <div className="form-group">
                 <label className="label">Preferred Location *</label>
-                <input {...register("location")} placeholder="e.g. Entebbe Road, Kampala" />
+                <select 
+                  {...register("location")}
+                  style={{ width: "100%", outline: "none", color: "var(--foreground)", background: "white", cursor: "pointer" }}
+                >
+                  <option value="">Select Preferred Location...</option>
+                  {UGANDA_LOCATIONS.map((loc) => (
+                    <option key={loc} value={loc}>{loc}</option>
+                  ))}
+                </select>
                 {errors.location && <p className="error-text">{errors.location.message}</p>}
               </div>
               <div className="form-group">

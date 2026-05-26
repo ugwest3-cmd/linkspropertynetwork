@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { Search, MapPin, Home, Layers, Building2, X, Filter, MessageCircle, Tag } from "lucide-react";
 import Link from "next/link";
 import styles from "./Home.module.css";
+import { UGANDA_LOCATIONS } from "@/lib/constants";
 
 type Listing = {
   id: string;
@@ -132,7 +133,16 @@ export default function MarketplacePage() {
         <label>Location</label>
         <div className={styles.inputWrapper}>
           <MapPin size={16} />
-          <input type="text" placeholder="e.g. Kampala, Kira..." value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} />
+          <select 
+            value={locationFilter} 
+            onChange={(e) => setLocationFilter(e.target.value)}
+            style={{ border: 'none', background: 'transparent', padding: '0.85rem 0', width: '100%', outline: 'none', fontSize: '0.9rem', color: 'var(--foreground)' }}
+          >
+            <option value="">All Locations</option>
+            {UGANDA_LOCATIONS.map((loc) => (
+              <option key={loc} value={loc}>{loc}</option>
+            ))}
+          </select>
         </div>
       </div>
       <div className={styles.filterGroup}>
