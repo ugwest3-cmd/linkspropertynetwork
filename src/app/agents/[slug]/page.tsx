@@ -22,28 +22,39 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ s
   // Support both Promise and plain params for different Next.js versions
   const resolvedParams = await params;
   const { slug } = resolvedParams;
-  const supabase = await createClient();
 
-  // Fetch Agent
-  const { data: agent, error: agentError } = await supabase
-    .from("agents")
-    .select("*")
-    .eq("slug", slug)
-    .eq("status", "approved")
-    .single();
+  let agent = null;
+  let listings: any[] = [];
 
-  if (agentError || !agent) {
+  try {
+    const supabase = await createClient();
+
+    // Fetch Agent
+    const { data: agentData, error: agentError } = await supabase
+      .from("agents")
+      .select("*")
+      .eq("slug", slug)
+      .eq("status", "approved")
+      .single();
+
+    if (agentError || !agentData) {
+      notFound();
+    }
+    
+    agent = agentData;
+
+    // Fetch Listings
+    const { data: listingsData } = await supabase
+      .from("listings")
+      .select("*")
+      .eq("agentId", agent.uid)
+      .eq("verified", true); // only show verified on public profiles
+    
+    listings = listingsData || [];
+  } catch (err) {
+    console.error("Error loading agent profile:", err);
     notFound();
   }
-
-  // Fetch Listings
-  const { data: listingsData } = await supabase
-    .from("listings")
-    .select("*")
-    .eq("agentId", agent.uid)
-    .eq("verified", true); // only show verified on public profiles
-  
-  const listings = listingsData || [];
 
   return (
     <>
