@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { Plus, Home, MapPin, CheckCircle, Clock, Copy, Pencil } from "lucide-react";
+import { Plus, Home, MapPin, CheckCircle, Clock, Copy, Pencil, LogOut } from "lucide-react";
 import styles from "./dashboard.module.css";
 
 type Listing = {
@@ -88,6 +88,12 @@ export default function AgentDashboardPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  };
+
   return (
     <div className={styles.dashWrap}>
 
@@ -130,6 +136,10 @@ export default function AgentDashboardPage() {
           <Pencil size={18} />
           <span>Edit Profile</span>
         </Link>
+        <button onClick={handleLogout} className={`${styles.qAction} ${styles.logoutBtn}`}>
+          <LogOut size={18} />
+          <span>Log Out</span>
+        </button>
       </div>
 
       {/* Listings */}

@@ -2,7 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { User, PlusCircle } from "lucide-react";
+import { User, PlusCircle, LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import styles from "./Navbar.module.css";
@@ -26,6 +26,11 @@ export default function Navbar() {
     return () => subscription.unsubscribe();
   }, [router, supabase]);
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push("/");
+  };
+
   return (
     <nav className={styles.nav}>
       <div className={`container ${styles.inner}`}>
@@ -40,9 +45,14 @@ export default function Navbar() {
           <Link href="/verify" className={styles.navLink}>Verify Title</Link>
           
           {session ? (
-            <Link href={session.user?.email?.includes("admin@") ? "/admin" : "/agent/dashboard"} className={styles.navLink}>
-              <User size={18} /> Dashboard
-            </Link>
+            <>
+              <Link href={session.user?.email?.includes("admin@") ? "/admin" : "/agent/dashboard"} className={styles.navLink}>
+                <User size={18} /> Dashboard
+              </Link>
+              <button onClick={handleSignOut} className={styles.signOutBtn}>
+                <LogOut size={16} /> Sign Out
+              </button>
+            </>
           ) : (
             <Link href="/agent/login" className={styles.navLink}>
               <User size={18} /> Sign In

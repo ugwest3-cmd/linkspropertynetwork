@@ -103,6 +103,16 @@
   background: rgba(249, 115, 22, 0.04);
 }
 
+.logoutBtn {
+  color: var(--error);
+}
+
+.logoutBtn:hover, .logoutBtn:active {
+  border-color: var(--error);
+  color: var(--error);
+  background: rgba(239, 68, 68, 0.04);
+}
+
 /* Listings Section */
 .listingsSection {
   margin-top: 0.5rem;
