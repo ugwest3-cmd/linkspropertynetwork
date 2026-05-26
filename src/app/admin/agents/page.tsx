@@ -104,19 +104,27 @@ export default function AgentsPage() {
                     <div className={styles.sub}>{v.email}</div>
                   </td>
                   <td>
-                    <a href={`https://wa.me/256${v.phone.replace(/^0/, "").replace(/\s/g, "")}?text=Hello%20${encodeURIComponent(v.name)}%2C%20your%20agent%20application%20has%20been%20reviewed`} target="_blank" rel="noopener noreferrer" className={styles.waLink}>
-                      {v.phone}
-                    </a>
+                    {v.phone ? (
+                      <a href={`https://wa.me/256${v.phone.replace(/^0/, "").replace(/\s/g, "")}?text=Hello%20${encodeURIComponent(v.name)}%2C%20your%20agent%20application%20has%20been%20reviewed`} target="_blank" rel="noopener noreferrer" className={styles.waLink}>
+                        {v.phone}
+                      </a>
+                    ) : (
+                      <span className={styles.sub}>No phone</span>
+                    )}
                   </td>
-                  <td>{v.areasServed}</td>
+                  <td>{v.areasServed || "N/A"}</td>
                   <td><span className={`badge badge-${v.plan === "paid" ? "verified" : "new"}`}>{v.plan}</span></td>
                   <td>
-                    <a href={v.socialLink} target="_blank" rel="noopener noreferrer" className={styles.fileLink}>
-                      <ExternalLink size={14} /> View
-                    </a>
+                    {v.socialLink ? (
+                      <a href={v.socialLink} target="_blank" rel="noopener noreferrer" className={styles.fileLink}>
+                        <ExternalLink size={14} /> View
+                      </a>
+                    ) : (
+                      <span className={styles.sub}>No link</span>
+                    )}
                   </td>
                   <td>
-                    <div className={styles.sub}>{v.nin}</div>
+                    <div className={styles.sub}>{v.nin || "N/A"}</div>
                     {v.ninPhotoURL && (
                       <a href={v.ninPhotoURL} target="_blank" rel="noopener noreferrer" className={styles.fileLink}>
                         <ExternalLink size={14} /> Photo

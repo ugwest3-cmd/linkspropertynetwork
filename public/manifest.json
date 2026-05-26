@@ -1,0 +1,19 @@
+{
+  "name": "Links Property Network",
+  "short_name": "LPN",
+  "description": "Uganda's private high-trust property network",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f97316",
+  "scope": "/",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
