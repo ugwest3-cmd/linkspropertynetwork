@@ -39,3 +39,11 @@ export const UGANDA_LOCATIONS = [
   "Kitgum",
   "Moroto"
 ] as const;
+
+export function formatPrice(priceStr: string | number): string {
+  if (!priceStr) return "0";
+  const cleanStr = String(priceStr).replace(/\D/g, "");
+  if (!cleanStr) return String(priceStr);
+  const num = parseInt(cleanStr, 10);
+  return num.toLocaleString("en-US");
+}

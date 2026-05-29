@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import { Search, MapPin, Home, Layers, Building2, X, Filter, MessageCircle, Tag } from "lucide-react";
 import Link from "next/link";
 import styles from "./Home.module.css";
-import { UGANDA_LOCATIONS } from "@/lib/constants";
+import { UGANDA_LOCATIONS, formatPrice } from "@/lib/constants";
 
 type Listing = {
   id: string;
@@ -267,7 +267,7 @@ export default function MarketplacePage() {
 
                         <div className={styles.cardFooter}>
                           <span className={styles.cardPrice}>
-                            <Tag size={15} /> UGX {listing.price}
+                            <Tag size={15} /> UGX {formatPrice(listing.price)}
                           </span>
                           {listing.agentPhone ? (
                             <a

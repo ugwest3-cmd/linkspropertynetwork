@@ -7,6 +7,7 @@ import { ShieldCheck, Users, ChevronRight, CheckCircle, Home, Layers, Building2,
 import styles from "./about.module.css";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { formatPrice } from "@/lib/constants";
 
 const WhatsAppIcon = ({ size = 16 }: { size?: number }) => (
   <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" fillRule="evenodd" clipRule="evenodd" style={{ display: "inline-block", verticalAlign: "middle" }}>
@@ -187,7 +188,7 @@ export default function AboutPage() {
                       </div>
                       <p className={styles.listingDesc}>{l.description.slice(0, 90)}{l.description.length > 90 ? "..." : ""}</p>
                       <div className={styles.listingFooter}>
-                        <span className={styles.price}><Tag size={13} /> UGX {l.price}</span>
+                        <span className={styles.price}><Tag size={13} /> UGX {formatPrice(l.price)}</span>
                         <a
                           href={waLink(l.agentPhone || "", l.title)}
                           target="_blank"

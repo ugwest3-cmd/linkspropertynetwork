@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { MapPin, Phone, CheckCircle, Home, Share2, Layers, Building2, Tag, MessageCircle } from "lucide-react";
 import styles from "./agentProfile.module.css";
+import { formatPrice } from "@/lib/constants";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
@@ -142,7 +143,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ s
 
                        <div className={styles.cardFooter}>
                          <span className={styles.cardPrice}>
-                           <Tag size={15} /> UGX {listing.price}
+                           <Tag size={15} /> UGX {formatPrice(listing.price)}
                          </span>
                          <a
                            href={`https://wa.me/256${agent.phone.replace(/^0/, "").replace(/\s/g, "")}?text=Hello%20${encodeURIComponent(agent.name)}%2C%20I%20am%20interested%20in%20your%20listing:%20${encodeURIComponent(listing.title)}`}

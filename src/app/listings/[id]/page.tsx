@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { MapPin, Tag, Share2, Phone, Home, Layers, Building2, User, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import styles from "./listing.module.css";
+import { formatPrice } from "@/lib/constants";
 const WhatsAppIcon = ({ size = 16 }: { size?: number }) => (
   <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" fillRule="evenodd" clipRule="evenodd" style={{ display: "inline-block", verticalAlign: "middle" }}>
     <path d="M12.012 2c-5.506 0-9.988 4.482-9.988 9.988 0 1.758.455 3.473 1.324 4.978L2.012 22l5.197-1.363a9.932 9.932 0 0 0 4.803 1.233c5.506 0 9.988-4.482 9.988-9.988 0-5.506-4.482-9.988-9.988-9.988zm4.848 13.911c-.247.694-1.229 1.265-1.954 1.341-.497.051-1.147.091-3.324-.81-2.784-1.151-4.587-3.987-4.726-4.172-.14-.185-1.127-1.5-1.127-2.861 0-1.361.714-2.029.967-2.296.254-.267.551-.334.736-.334.185 0 .368.002.53.01.171.008.398-.065.623.477.23.555.787 1.916.856 2.055.069.139.115.301.022.486-.092.185-.138.301-.277.463-.139.162-.292.361-.416.483-.139.137-.284.287-.123.564.161.277.719 1.186 1.541 1.918.822.732 1.516.957 1.838 1.096.322.139.507.115.694-.092.185-.208.809-.942 1.023-1.265.215-.324.43-.277.721-.169.292.108 1.85.874 2.172 1.036.322.162.538.243.619.381.081.139.081.809-.166 1.503z" />
@@ -137,7 +138,7 @@ export default function ListingPage({ params }: { params: Promise<{ id: string }
 
               {/* Price — visible on desktop, hidden on mobile (shown in sticky bar) */}
               <div className={styles.infoPrice}>
-                <Tag size={18} /> UGX {listing.price}
+                <Tag size={18} /> UGX {formatPrice(listing.price)}
               </div>
 
               {/* Meta row */}
@@ -213,7 +214,7 @@ export default function ListingPage({ params }: { params: Promise<{ id: string }
       {agent && (
         <div className={styles.mobileCta}>
           <span className={styles.mobilePriceLabel}>
-            UGX {listing.price}
+            UGX {formatPrice(listing.price)}
           </span>
           <a
             href={waContactUrl}

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 import { LayoutList, ExternalLink, CheckCircle, XCircle } from "lucide-react";
 import styles from "../table.module.css";
+import { formatPrice } from "@/lib/constants";
 
 type Listing = {
   id: string;
@@ -114,7 +115,7 @@ export default function AdminListingsPage() {
                   </td>
                   <td><span className={`badge badge-new`}>{item.type}</span></td>
                   <td>{item.location}</td>
-                  <td>UGX {item.price}</td>
+                  <td>UGX {formatPrice(item.price)}</td>
                   <td>{item.agentName}</td>
                   <td>
                     {item.photos?.[0] ? (

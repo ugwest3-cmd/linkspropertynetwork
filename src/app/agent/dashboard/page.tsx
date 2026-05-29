@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Plus, Home, MapPin, CheckCircle, Clock, Copy, Pencil, LogOut } from "lucide-react";
 import styles from "./dashboard.module.css";
+import { formatPrice } from "@/lib/constants";
 
 type Listing = {
   id: string;
@@ -181,7 +182,7 @@ export default function AgentDashboardPage() {
                   </div>
                   <h3 className={styles.cardTitle}>{listing.title}</h3>
                   <div className={styles.cardMeta}>
-                    <span className={styles.cardPrice}>UGX {listing.price}</span>
+                    <span className={styles.cardPrice}>UGX {formatPrice(listing.price)}</span>
                     <span className={styles.cardLoc}><MapPin size={12} /> {listing.location}</span>
                   </div>
                   <button
