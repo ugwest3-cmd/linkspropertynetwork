@@ -152,6 +152,7 @@
   border: none;
   cursor: pointer;
   min-width: 70px;
+  flex-shrink: 0;
 }
 
 .catIcon {
